@@ -1,0 +1,1267 @@
+// ─── OmniOps Database Schema ─────────────────────
+// Multi-tenant enterprise hospitality SaaS platform
+// Discriminator-column multi-tenancy (tenantId on scoped tables)
+// Provider: PostgreSQL with row-level security enforced at API layer
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ══════════════════════════════════════════════════
+// TENANT & SITE
+// ══════════════════════════════════════════════════
+
+model Tenant {
+  id               String             @id @default(uuid())
+  name             String
+  slug             String             @unique
+  legalName        String?
+  taxId            String?
+  email            String
+  phone            String?
+  address          Json?
+  logoUrl          String?
+  themeConfig      Json?
+  subscriptionTier SubscriptionTier   @default(FREE)
+  featureFlags     Json?
+  status           TenantStatus       @default(ACTIVE)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  sites             Site[]
+  users             User[]
+  menus             Menu[]
+  orders            Order[]
+  auditLogs         AuditLog[]
+  signageContents   SignageContent[] @relation("TenantSignageContents")
+  signagePlaylists  SignagePlaylist[] @relation("TenantSignagePlaylists")
+  assets            Asset[]
+  maintenanceTickets MaintenanceTicket[]
+  vendors           Vendor[]
+  auditTemplates    AuditTemplate[]
+  audits            Audit[]
+  surveyTemplates   SurveyTemplate[]
+  surveys           Survey[]
+  fieldReports      FieldReport[]
+
+  @@map("tenants")
+}
+
+model Site {
+  id             String     @id @default(uuid())
+  tenantId       String
+  name           String
+  slug           String
+  siteType       SiteType   @default(RESTAURANT)
+  cuisine        String[]
+  legalEntity    String?
+  taxNumber      String?
+  bankingDetails Json?
+  address        Json?
+  timezone       String     @default("UTC")
+  phone          String?
+  email          String?
+  siteConfig     Json?
+  status         SiteStatus @default(DRAFT)
+  goLiveDate     DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  tenant         Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  users          User[]
+  floorPlans     FloorPlan[]
+  tables         Table[]
+  orders         Order[]
+  shifts         Shift[]
+  auditLogs      AuditLog[]
+  siteMenus      SiteMenu[]
+  signageContents  SignageContent[]  @relation("SiteSignageContents")
+  signagePlaylists SignagePlaylist[] @relation("SiteSignagePlaylists")
+  signageSchedules SignageSchedule[] @relation("SiteSignageSchedules")
+  signageScreens   SignageScreen[]   @relation("SiteSignageScreens")
+  assets            Asset[]
+  maintenanceTickets MaintenanceTicket[]
+  audits            Audit[]
+  surveys           Survey[]
+  fieldReports      FieldReport[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@map("sites")
+}
+
+// ══════════════════════════════════════════════════
+// USER & RBAC
+// ══════════════════════════════════════════════════
+
+model User {
+  id           String     @id @default(uuid())
+  tenantId     String?
+  email        String
+  phone        String?
+  passwordHash String
+  firstName    String
+  lastName     String
+  role         Role       @default(FOH)
+  permissions  Json?
+  siteId       String?
+  status       UserStatus @default(INVITED)
+  lastLoginAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  tenant           Tenant?      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  site             Site?        @relation(fields: [siteId], references: [id], onDelete: SetNull)
+  orders           Order[]
+  discountApprovals Discount[]  @relation("DiscountApprovedBy")
+  shiftOpened      Shift[]      @relation("ShiftOpenedBy")
+  shiftClosed      Shift[]      @relation("ShiftClosedBy")
+  shiftStaffs      ShiftStaff[]
+  auditLogs        AuditLog[]
+  paymentRefunds   Payment[]    @relation("RefundApprovedBy")
+  submittedSignage SignageContent[] @relation("SignageSubmittedBy")
+  signageApprovals SignageApproval[] @relation("SignageApprovedBy")
+  reportedTickets  MaintenanceTicket[] @relation("ReportedTickets")
+  assignedTickets  MaintenanceTicket[] @relation("AssignedTickets")
+  ticketComments   TicketComment[]
+  auditsConducted  Audit[]        @relation("AuditsConducted")
+  assignedCapas    CAPA[]         @relation("CAPAsAssigned")
+  reportedFieldReports FieldReport[] @relation("ReportedFieldReports")
+  fieldReportComments  FieldReportComment[]
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@index([siteId])
+  @@map("users")
+}
+
+// ══════════════════════════════════════════════════
+// FLOOR PLAN & TABLES
+// ══════════════════════════════════════════════════
+
+model FloorPlan {
+  id          String   @id @default(uuid())
+  siteId      String
+  name        String
+  description String?
+  layout      Json?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  site   Site   @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  tables Table[]
+
+  @@index([siteId])
+  @@map("floor_plans")
+}
+
+model Table {
+  id          String      @id @default(uuid())
+  floorPlanId String
+  siteId      String
+  number      String
+  section     String?
+  capacity    Int         @default(4)
+  status      TableStatus @default(AVAILABLE)
+  position    Json?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  floorPlan FloorPlan @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
+  site      Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  orders    Order[]
+
+  @@unique([siteId, number])
+  @@index([floorPlanId])
+  @@index([siteId])
+  @@map("tables")
+}
+
+// ══════════════════════════════════════════════════
+// MENU
+// ══════════════════════════════════════════════════
+
+model Menu {
+  id                   String    @id @default(uuid())
+  tenantId             String
+  name                 String
+  description          String?
+  menuType             MenuType  @default(DINE_IN)
+  isActive             Boolean   @default(true)
+  availabilitySchedule Json?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  tenant     Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  categories MenuCategory[]
+  items      MenuItem[]
+  siteMenus  SiteMenu[]
+
+  @@index([tenantId])
+  @@map("menus")
+}
+
+model SiteMenu {
+  siteId String
+  menuId String
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  menu Menu @relation(fields: [menuId], references: [id], onDelete: Cascade)
+
+  @@id([siteId, menuId])
+  @@map("site_menus")
+}
+
+model MenuCategory {
+  id          String   @id @default(uuid())
+  menuId      String
+  name        String
+  description String?
+  sortOrder   Int      @default(0)
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  menu  Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  items MenuItem[]
+
+  @@index([menuId])
+  @@map("menu_categories")
+}
+
+model MenuItem {
+  id              String            @id @default(uuid())
+  categoryId      String
+  menuId          String
+  name            String
+  description     String?
+  shortCode       String?
+  imageUrl        String?
+  price           Decimal           @db.Decimal(10, 2)
+  costPrice       Decimal?          @db.Decimal(10, 2)
+  taxRate         Decimal           @default(0) @db.Decimal(5, 2)
+  prepTimeMinutes Int               @default(10)
+  station         Station           @default(EXPO)
+  dietaryTags     String[]
+  allergens       String[]
+  status          MenuItemStatus    @default(AVAILABLE)
+  sortOrder       Int               @default(0)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  category        MenuCategory            @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  menu            Menu                    @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  modifierGroups  MenuItemModifierGroup[]
+  orderItems      OrderItem[]
+
+  @@index([categoryId])
+  @@index([menuId])
+  @@map("menu_items")
+}
+
+model MenuItemModifierGroup {
+  id         String   @id @default(uuid())
+  menuItemId String
+  name       String
+  minSelect  Int      @default(0)
+  maxSelect  Int      @default(1)
+  required   Boolean  @default(false)
+  sortOrder  Int      @default(0)
+
+  menuItem  MenuItem           @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  modifiers MenuItemModifier[]
+
+  @@index([menuItemId])
+  @@map("menu_item_modifier_groups")
+}
+
+model MenuItemModifier {
+  id              String   @id @default(uuid())
+  modifierGroupId String
+  name            String
+  priceAdjustment Decimal  @default(0) @db.Decimal(10, 2)
+  isDefault       Boolean  @default(false)
+  sortOrder       Int      @default(0)
+
+  modifierGroup MenuItemModifierGroup @relation(fields: [modifierGroupId], references: [id], onDelete: Cascade)
+
+  @@index([modifierGroupId])
+  @@map("menu_item_modifiers")
+}
+
+// ══════════════════════════════════════════════════
+// ORDERS
+// ══════════════════════════════════════════════════
+
+model Order {
+  id                 String      @id @default(uuid())
+  tenantId           String
+  siteId             String
+  userId             String?
+  customerId         String?
+  orderNumber        Int
+  orderType          OrderType   @default(DINE_IN)
+  channel            OrderChannel @default(POS)
+  status             OrderStatus @default(DRAFT)
+  subTotal           Decimal     @default(0) @db.Decimal(10, 2)
+  taxTotal           Decimal     @default(0) @db.Decimal(10, 2)
+  discountTotal      Decimal     @default(0) @db.Decimal(10, 2)
+  grandTotal         Decimal     @default(0) @db.Decimal(10, 2)
+  tableId            String?
+  guestCount         Int         @default(1)
+  notes              String?
+  aggregatorOrderId  String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  tenant    Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  site      Site           @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  user      User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  table     Table?         @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  items     OrderItem[]
+  discounts Discount[]
+  payments  Payment[]
+
+  @@unique([siteId, orderNumber])
+  @@index([tenantId])
+  @@index([siteId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String            @id @default(uuid())
+  orderId     String
+  menuItemId  String
+  name        String
+  quantity    Int               @default(1)
+  unitPrice   Decimal           @db.Decimal(10, 2)
+  totalPrice  Decimal           @db.Decimal(10, 2)
+  taxRate     Decimal           @default(0) @db.Decimal(5, 2)
+  station     Station           @default(EXPO)
+  status      OrderItemStatus   @default(PENDING)
+  notes       String?
+  firedAt     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime          @default(now())
+
+  order     Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem  MenuItem            @relation(fields: [menuItemId], references: [id], onDelete: Restrict)
+  modifiers OrderItemModifier[]
+
+  @@index([orderId])
+  @@index([menuItemId])
+  @@index([status])
+  @@map("order_items")
+}
+
+model OrderItemModifier {
+  id             String  @id @default(uuid())
+  orderItemId    String
+  modifierName   String
+  priceAdjustment Decimal @default(0) @db.Decimal(10, 2)
+
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  @@index([orderItemId])
+  @@map("order_item_modifiers")
+}
+
+// ══════════════════════════════════════════════════
+// DISCOUNTS & PAYMENTS
+// ══════════════════════════════════════════════════
+
+model Discount {
+  id         String         @id @default(uuid())
+  orderId    String
+  type       DiscountType   @default(FIXED_AMOUNT)
+  value      Decimal        @db.Decimal(10, 2)
+  reason     String?
+  approvedBy String?
+  createdAt  DateTime       @default(now())
+
+  order    Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  approver User? @relation("DiscountApprovedBy", fields: [approvedBy], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@map("discounts")
+}
+
+model Payment {
+  id                    String        @id @default(uuid())
+  orderId               String
+  amount                Decimal       @db.Decimal(10, 2)
+  method                PaymentMethod @default(CARD)
+  status                PaymentStatus @default(PENDING)
+  gatewayTransactionId  String?
+  gatewayResponse       Json?
+  refundReason          String?
+  refundApprovedBy      String?
+  createdAt             DateTime      @default(now())
+
+  order           Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  refundApprover  User? @relation("RefundApprovedBy", fields: [refundApprovedBy], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@map("payments")
+}
+
+// ══════════════════════════════════════════════════
+// SHIFT & STAFF
+// ══════════════════════════════════════════════════
+
+model Shift {
+  id            String      @id @default(uuid())
+  siteId        String
+  name          String
+  startTime     DateTime
+  endTime       DateTime?
+  openedById    String
+  closedById    String?
+  openingCash   Decimal?    @db.Decimal(10, 2)
+  closingCash   Decimal?    @db.Decimal(10, 2)
+  expectedCash  Decimal?    @db.Decimal(10, 2)
+  cashVariance  Decimal?    @db.Decimal(10, 2)
+  notes         String?
+  status        ShiftStatus @default(OPEN)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  site      Site         @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  openedBy  User         @relation("ShiftOpenedBy", fields: [openedById], references: [id], onDelete: Restrict)
+  closedBy  User?        @relation("ShiftClosedBy", fields: [closedById], references: [id], onDelete: SetNull)
+  staffList ShiftStaff[]
+
+  @@index([siteId])
+  @@index([status])
+  @@map("shifts")
+}
+
+model ShiftStaff {
+  shiftId String
+  userId  String
+
+  shift Shift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([shiftId, userId])
+  @@map("shift_staff")
+}
+
+// ══════════════════════════════════════════════════
+// AUDIT LOG
+// ══════════════════════════════════════════════════
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  tenantId   String
+  siteId     String?
+  userId     String
+  action     String
+  entityType String
+  entityId   String
+  oldValue   Json?
+  newValue   Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  site   Site?  @relation(fields: [siteId], references: [id], onDelete: SetNull)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([entityType])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ══════════════════════════════════════════════════
+// DIGITAL SIGNAGE
+// ══════════════════════════════════════════════════
+
+model SignageContent {
+  id           String               @id @default(uuid())
+  tenantId     String
+  title        String
+  description  String?
+  mediaType    SignageMediaType
+  mediaUrl     String
+  thumbnailUrl String?
+  duration     Int                  @default(10)
+  status       SignageContentStatus @default(DRAFT)
+  submittedById String
+  siteId       String?
+  playlistId   String?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  tenant      Tenant            @relation("TenantSignageContents", fields: [tenantId], references: [id], onDelete: Cascade)
+  site        Site?             @relation("SiteSignageContents", fields: [siteId], references: [id], onDelete: SetNull)
+  submittedBy User              @relation("SignageSubmittedBy", fields: [submittedById], references: [id], onDelete: Restrict)
+  playlist    SignagePlaylist?  @relation(fields: [playlistId], references: [id], onDelete: SetNull)
+  schedules   SignageSchedule[]
+  approvals   SignageApproval[]
+
+  @@index([tenantId])
+  @@index([siteId])
+  @@index([status])
+  @@index([playlistId])
+  @@map("signage_contents")
+}
+
+model SignagePlaylist {
+  id        String   @id @default(uuid())
+  tenantId  String
+  siteId    String?
+  name      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant    Tenant            @relation("TenantSignagePlaylists", fields: [tenantId], references: [id], onDelete: Cascade)
+  site      Site?             @relation("SiteSignagePlaylists", fields: [siteId], references: [id], onDelete: SetNull)
+  contents  SignageContent[]
+  schedules SignageSchedule[]
+
+  @@index([tenantId])
+  @@index([siteId])
+  @@map("signage_playlists")
+}
+
+model SignageSchedule {
+  id         String   @id @default(uuid())
+  playlistId String
+  contentId  String?
+  siteId     String
+  dayOfWeek  Int[]
+  startTime  String
+  endTime    String
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  playlist SignagePlaylist  @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  content  SignageContent?  @relation(fields: [contentId], references: [id], onDelete: SetNull)
+  site     Site             @relation("SiteSignageSchedules", fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([siteId])
+  @@index([playlistId])
+  @@map("signage_schedules")
+}
+
+model SignageApproval {
+  id           String               @id @default(uuid())
+  contentId    String
+  approvedById String
+  status       SignageApprovalStatus
+  comment      String?
+  createdAt    DateTime             @default(now())
+
+  content    SignageContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  approvedBy User           @relation("SignageApprovedBy", fields: [approvedById], references: [id], onDelete: Restrict)
+
+  @@index([contentId])
+  @@map("signage_approvals")
+}
+
+model SignageScreen {
+  id            String    @id @default(uuid())
+  siteId        String
+  deviceId      String    @unique
+  name          String
+  lastHeartbeat DateTime?
+  isOnline      Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+
+  site Site @relation("SiteSignageScreens", fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([siteId])
+  @@map("signage_screens")
+}
+
+// ══════════════════════════════════════════════════
+// MAINTENANCE (CMMS)
+// ══════════════════════════════════════════════════
+
+model Asset {
+  id             String      @id @default(uuid())
+  tenantId       String
+  siteId         String
+  name           String
+  category       String
+  model          String?
+  serialNumber   String?
+  manufacturer   String?
+  purchaseDate   DateTime?
+  warrantyExpiry DateTime?
+  location       String?
+  status         AssetStatus @default(OPERATIONAL)
+  notes          String?
+  imageUrl       String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  tenant    Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  site      Site                 @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  tickets   MaintenanceTicket[]
+  schedules PreventiveSchedule[]
+
+  @@index([siteId])
+  @@index([status])
+  @@map("assets")
+}
+
+model MaintenanceTicket {
+  id           String        @id @default(uuid())
+  tenantId     String
+  siteId       String
+  assetId      String?
+  title        String
+  description  String
+  priority     TicketPriority @default(MEDIUM)
+  status       TicketStatus   @default(OPEN)
+  category     String
+  reportedById String
+  assignedToId String?
+  vendorId     String?
+  slaDueAt     DateTime?
+  resolvedAt   DateTime?
+  closedAt     DateTime?
+  resolution   String?
+  costEstimate Decimal?       @db.Decimal(10, 2)
+  actualCost   Decimal?       @db.Decimal(10, 2)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  tenant     Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  site       Site            @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  asset      Asset?          @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  reportedBy User            @relation("ReportedTickets", fields: [reportedById], references: [id], onDelete: Restrict)
+  assignedTo User?           @relation("AssignedTickets", fields: [assignedToId], references: [id], onDelete: SetNull)
+  vendor     Vendor?         @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  comments   TicketComment[]
+  photos     TicketPhoto[]
+
+  @@index([siteId, status])
+  @@index([assignedToId])
+  @@map("maintenance_tickets")
+}
+
+model TicketComment {
+  id        String            @id @default(uuid())
+  ticketId  String
+  userId    String
+  content   String
+  createdAt DateTime          @default(now())
+
+  ticket    MaintenanceTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@map("ticket_comments")
+}
+
+model TicketPhoto {
+  id        String            @id @default(uuid())
+  ticketId  String
+  url       String
+  caption   String?
+  createdAt DateTime          @default(now())
+
+  ticket    MaintenanceTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@map("ticket_photos")
+}
+
+model Vendor {
+  id          String   @id @default(uuid())
+  tenantId    String
+  name        String
+  category    String
+  contactName String?
+  email       String?
+  phone       String?
+  rating      Int?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant  Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tickets MaintenanceTicket[]
+
+  @@index([tenantId])
+  @@map("vendors")
+}
+
+model PreventiveSchedule {
+  id          String               @id @default(uuid())
+  assetId     String
+  title       String
+  description String?
+  frequency   MaintenanceFrequency
+  nextDueAt   DateTime
+  lastDoneAt  DateTime?
+  isActive    Boolean              @default(true)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  asset       Asset                @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId])
+  @@map("preventive_schedules")
+}
+
+
+// ══════════════════════════════════════════════════
+// QUALITY AUDITS & CAPA
+// ══════════════════════════════════════════════════
+model AuditTemplate {
+  id          String   @id @default(uuid())
+  tenantId    String
+  name        String
+  description String?
+  category    String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sections AuditSection[]
+  audits   Audit[]
+  @@index([tenantId])
+  @@map("audit_templates")
+}
+
+model AuditSection {
+  id          String   @id @default(uuid())
+  templateId  String
+  title       String
+  description String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  template AuditTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  items    AuditItem[]
+  @@index([templateId])
+  @@map("audit_sections")
+}
+
+model AuditItem {
+  id          String        @id @default(uuid())
+  sectionId   String
+  question    String
+  description String?
+  itemType    AuditItemType
+  required    Boolean       @default(true)
+  sortOrder   Int           @default(0)
+  createdAt   DateTime      @default(now())
+
+  section   AuditSection    @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  responses AuditResponse[]
+  @@index([sectionId])
+  @@map("audit_items")
+}
+
+model Audit {
+  id          String      @id @default(uuid())
+  tenantId    String
+  siteId      String
+  templateId  String
+  title       String
+  auditorId   String
+  status      AuditStatus @default(IN_PROGRESS)
+  score       Float?
+  maxScore    Float?
+  startedAt   DateTime    @default(now())
+  completedAt DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  tenant    Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  site      Site            @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  template  AuditTemplate   @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  auditor   User            @relation("AuditsConducted", fields: [auditorId], references: [id], onDelete: Restrict)
+  responses AuditResponse[]
+  capas     CAPA[]
+  @@index([siteId, status])
+  @@index([tenantId])
+  @@map("audits")
+}
+
+model AuditResponse {
+  id        String    @id @default(uuid())
+  auditId   String
+  itemId    String
+  value     String
+  notes     String?
+  photoUrl  String?
+  createdAt DateTime  @default(now())
+
+  audit Audit     @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  item  AuditItem @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  @@unique([auditId, itemId])
+  @@index([auditId])
+  @@map("audit_responses")
+}
+
+model CAPA {
+  id           String     @id @default(uuid())
+  auditId      String
+  title        String
+  description  String
+  assignedToId String
+  priority     CAPAPriority @default(MEDIUM)
+  status       CAPAStatus   @default(OPEN)
+  dueDate      DateTime?
+  resolvedAt   DateTime?
+  resolution   String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  audit      Audit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  assignedTo User  @relation("CAPAsAssigned", fields: [assignedToId], references: [id], onDelete: Restrict)
+  @@index([auditId])
+  @@index([status])
+  @@index([assignedToId])
+  @@map("capas")
+}
+
+// ══════════════════════════════════════════════════
+// SURVEYS (NPS / CSAT / FEEDBACK)
+// ══════════════════════════════════════════════════
+
+model SurveyTemplate {
+  id          String               @id @default(uuid())
+  tenantId    String
+  name        String
+  description String?
+  status      SurveyTemplateStatus @default(DRAFT)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  tenant    Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  questions SurveyQuestion[]
+  surveys   Survey[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@map("survey_templates")
+}
+
+model SurveyQuestion {
+  id         String             @id @default(uuid())
+  templateId String
+  type       SurveyQuestionType
+  prompt     String
+  required   Boolean            @default(true)
+  order      Int                @default(0)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  template  SurveyTemplate        @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  options   SurveyQuestionOption[]
+  answers   SurveyAnswer[]
+
+  @@index([templateId])
+  @@map("survey_questions")
+}
+
+model SurveyQuestionOption {
+  id         String @id @default(uuid())
+  questionId String
+  label      String
+  value      String
+  order      Int    @default(0)
+
+  question SurveyQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@map("survey_question_options")
+}
+
+model Survey {
+  id            String        @id @default(uuid())
+  tenantId      String
+  siteId        String
+  templateId    String
+  title         String
+  status        SurveyStatus  @default(DRAFT)
+  channel       SurveyChannel @default(QR)
+  startsAt      DateTime?
+  endsAt        DateTime?
+  publicSlug    String        @unique
+  responseCount Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  tenant    Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  site      Site           @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  template  SurveyTemplate @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  responses SurveyResponse[]
+
+  @@index([tenantId])
+  @@index([siteId, status])
+  @@index([publicSlug])
+  @@map("surveys")
+}
+
+model SurveyResponse {
+  id            String    @id @default(uuid())
+  surveyId      String
+  orderId       String?
+  customerEmail String?
+  customerName  String?
+  submittedAt   DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+
+  survey  Survey         @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  answers SurveyAnswer[]
+
+  @@index([surveyId])
+  @@index([submittedAt])
+  @@map("survey_responses")
+}
+
+model SurveyAnswer {
+  id           String  @id @default(uuid())
+  responseId   String
+  questionId   String
+  answerText   String?
+  ratingValue  Int?
+  choiceValues String[]
+
+  response SurveyResponse @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  question SurveyQuestion @relation(fields: [questionId], references: [id], onDelete: Restrict)
+
+  @@index([responseId])
+  @@index([questionId])
+  @@map("survey_answers")
+}
+// ══════════════════════════════════════════════════
+// FIELD REPORTS
+// ══════════════════════════════════════════════════
+model FieldReport {
+  id           String               @id @default(uuid())
+  tenantId     String
+  siteId       String
+  category     FieldReportCategory  @default(OTHER)
+  severity     FieldReportSeverity  @default(MEDIUM)
+  title        String
+  description  String
+  status       FieldReportStatus    @default(NEW)
+  reportedById String
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  tenant     Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  site       Site                 @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  reportedBy User                 @relation("ReportedFieldReports", fields: [reportedById], references: [id], onDelete: Restrict)
+  comments   FieldReportComment[]
+  @@index([siteId, status])
+  @@index([tenantId])
+  @@map("field_reports")
+}
+model FieldReportComment {
+  id        String      @id @default(uuid())
+  reportId  String
+  authorId  String
+  body      String
+  createdAt DateTime    @default(now())
+  report    FieldReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  author    User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  @@index([reportId])
+  @@map("field_report_comments")
+}
+
+// ══════════════════════════════════════════════════
+// ENUMS
+// ══════════════════════════════════════════════════
+
+enum SubscriptionTier {
+  FREE
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum SiteType {
+  RESTAURANT
+  LOUNGE
+  CLOUD_KITCHEN
+  QSR
+  CAFE
+  BAR
+}
+
+enum SiteStatus {
+  DRAFT
+  ONBOARDING
+  LIVE
+  SUSPENDED
+  CLOSED
+}
+
+enum Role {
+  SUPER_ADMIN
+  BRAND_MANAGER
+  SITE_LEAD
+  KITCHEN_STAFF
+  FOH
+  MAINTENANCE_TECH
+  QUALITY_AUDITOR
+  HR_ADMIN
+  MARKETING_ADMIN
+  CUSTOMER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  INVITED
+  SUSPENDED
+}
+
+enum TableStatus {
+  AVAILABLE
+  OCCUPIED
+  RESERVED
+  DIRTY
+  OUT_OF_SERVICE
+}
+
+enum MenuType {
+  DINE_IN
+  TAKEAWAY
+  DELIVERY
+  CATERING
+  ALL_DAY
+  BAR
+}
+
+enum Station {
+  GRILL
+  FRY
+  COLD
+  DRINKS
+  DESSERT
+  EXPO
+}
+
+enum MenuItemStatus {
+  AVAILABLE
+  EIGHTY_SIX
+  COMING_SOON
+  DISCONTINUED
+}
+
+enum OrderType {
+  DINE_IN
+  TAKEAWAY
+  DELIVERY
+  CURBSIDE
+  DRIVE_THRU
+  AGGREGATOR
+  CATERING
+  PRE_ORDER
+}
+
+enum OrderChannel {
+  POS
+  QR
+  KIOSK
+  MOBILE_APP
+  CALL_CENTER
+  AGGREGATOR
+}
+
+enum OrderStatus {
+  DRAFT
+  CONFIRMED
+  PREPARING
+  READY
+  SERVED
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+enum OrderItemStatus {
+  PENDING
+  PREPARING
+  READY
+  SERVED
+  CANCELLED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  ITEM
+  COMP
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  UPI
+  DIGITAL_WALLET
+  NET_BANKING
+  BNPL
+  GIFT_CARD
+  STORE_CREDIT
+  LOYALTY_POINTS
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  VOIDED
+}
+
+enum ShiftStatus {
+  OPEN
+  CLOSING
+  CLOSED
+}
+
+enum SignageMediaType {
+  IMAGE
+  VIDEO
+}
+
+enum SignageContentStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  LIVE
+  EXPIRED
+  REJECTED
+}
+
+enum SignageApprovalStatus {
+  APPROVED
+  REJECTED
+}
+
+enum AssetStatus {
+  OPERATIONAL
+  NEEDS_REPAIR
+  UNDER_MAINTENANCE
+  DECOMMISSIONED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TicketStatus {
+  OPEN
+  ASSIGNED
+  IN_PROGRESS
+  ON_HOLD
+  RESOLVED
+  CLOSED
+}
+
+enum MaintenanceFrequency {
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  QUARTERLY
+  BIANNUAL
+  ANNUAL
+}
+
+enum AuditItemType {
+  PASS_FAIL
+  SCORE_1_5
+  TEMPERATURE
+  PHOTO_REQUIRED
+  YES_NO
+}
+enum AuditStatus {
+  IN_PROGRESS
+  COMPLETED
+  REVIEWED
+  CLOSED
+}
+enum CAPAPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+enum CAPAStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  VERIFIED
+}
+
+enum SurveyTemplateStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum SurveyQuestionType {
+  STAR_RATING
+  NPS
+  CSAT
+  TEXT
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+}
+
+enum SurveyStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+}
+
+enum SurveyChannel {
+  QR
+  EMAIL
+  SMS
+  IN_STORE
+}
+enum FieldReportCategory {
+  SAFETY
+  QUALITY
+  MAINTENANCE
+  COMPLIANCE
+  OTHER
+}
+enum FieldReportSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+enum FieldReportStatus {
+  NEW
+  REVIEWED
+  ACTIONED
+  DISMISSED
+}

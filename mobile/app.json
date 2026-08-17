@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "OmniOps",
+    "slug": "omniops-customer",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "omniops",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.omniops.customer"
+    },
+    "android": {
+      "package": "com.omniops.customer"
+    }
+  }
+}

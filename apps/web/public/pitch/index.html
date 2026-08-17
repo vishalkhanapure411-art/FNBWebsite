@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OmniOps — One Platform for the Entire Restaurant Operation</title>
+<meta name="description" content="OmniOps client pitch — Vishal Multicuisine (11 cities) live demo case study.">
+<style>
+  :root{
+    --bg:#0d1117; --bg2:#131a23; --panel:#171f2b; --panel2:#1d2735;
+    --ink:#f2ede3; --ink-dim:#aeb8c6; --ink-faint:#7d8a9c;
+    --accent:#e63946; --accent-soft:#ff6b6b; --gold:#e0b24b; --green:#5dd39e;
+    --line:#26324a; --line-soft:#1e2838;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;background:var(--bg);color:var(--ink);
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;overflow:hidden}
+  ::selection{background:var(--accent);color:#fff}
+
+  /* ---------- deck shell ---------- */
+  #deck{position:fixed;inset:0}
+  .slide{position:absolute;inset:0;display:flex;flex-direction:column;
+    padding:6.5vh 6vw 9vh;opacity:0;visibility:hidden;transform:translateX(40px);
+    transition:opacity .45s ease,transform .45s ease,visibility .45s;overflow:hidden;
+    background:radial-gradient(1200px 600px at 85% -10%,rgba(230,57,70,.08),transparent 60%),
+               radial-gradient(900px 500px at -10% 110%,rgba(13,17,23,0),transparent 60%),var(--bg);
+  }
+  .slide.active{opacity:1;visibility:visible;transform:none;z-index:2}
+  .slide::after{content:"";position:absolute;left:6vw;bottom:0;width:64px;height:3px;background:linear-gradient(90deg,var(--accent),transparent);opacity:.85}
+
+  .kicker{display:inline-flex;align-items:center;gap:.5rem;font-size:.72rem;font-weight:700;
+    letter-spacing:.22em;text-transform:uppercase;color:var(--accent-soft);margin-bottom:1.6vh}
+  .kicker::before{content:"";width:22px;height:2px;background:var(--accent)}
+  h1{font-family:Georgia,"Times New Roman",serif;font-weight:700;line-height:1.08;
+    font-size:clamp(2rem,4.6vh,3.6rem);letter-spacing:-.01em}
+  h1 .amp{color:var(--accent-soft);font-style:italic}
+  h2{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:clamp(1.4rem,3vh,2.2rem);line-height:1.15}
+  .lede{font-size:clamp(1rem,2vh,1.35rem);color:var(--ink-dim);line-height:1.55;max-width:62ch;margin-top:1.6vh}
+  .dim{color:var(--ink-faint)}
+
+  .slide-body{flex:1;display:flex;gap:3.5vw;align-items:center;min-height:0;margin-top:2.6vh}
+  .col-text{flex:1.1;min-width:0}
+  .col-media{flex:1;min-width:0;display:flex;flex-direction:column;gap:2vh}
+
+  /* ---------- bullets ---------- */
+  ul.pts{list-style:none;margin-top:2.4vh;display:flex;flex-direction:column;gap:1.7vh}
+  ul.pts li{position:relative;padding-left:1.7rem;color:var(--ink-dim);font-size:clamp(.92rem,1.85vh,1.12rem);line-height:1.5}
+  ul.pts li b{color:var(--ink);font-weight:600}
+  ul.pts li::before{content:"";position:absolute;left:.2rem;top:.55em;width:8px;height:8px;
+    background:var(--accent);transform:rotate(45deg)}
+  ul.pts.small li{font-size:clamp(.85rem,1.7vh,1rem)}
+
+  /* ---------- chips ---------- */
+  .chips{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:2.2vh}
+  .chip{padding:.45rem 1rem;border:1px solid var(--line);border-radius:999px;font-size:.82rem;
+    color:var(--ink-dim);background:var(--panel)}
+  .chip b{color:var(--ink)}
+  .chip.off{opacity:.45;text-decoration:line-through}
+  .chip.hot{border-color:rgba(230,57,70,.55);color:var(--accent-soft);background:rgba(230,57,70,.08)}
+
+  /* ---------- stat blocks ---------- */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-top:2.6vh}
+  .stat{background:var(--panel);border:1px solid var(--line-soft);border-radius:12px;padding:1.1rem 1.2rem}
+  .stat .num{font-family:Georgia,serif;font-size:clamp(1.6rem,3.4vh,2.5rem);font-weight:700;color:var(--ink);line-height:1}
+  .stat .num em{font-style:normal;color:var(--accent-soft)}
+  .stat .lbl{margin-top:.5rem;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .stat.warn .num{color:#ff9f43}
+  .stat.danger .num{color:var(--accent-soft)}
+  .stat.ok .num{color:var(--green)}
+
+  /* ---------- screenshot frames ---------- */
+  figure.shot{margin:0;flex:1;min-height:0;display:flex;flex-direction:column}
+  .shot .frame{flex:1;min-height:0;border-radius:10px;overflow:hidden;border:1px solid var(--line);
+    background:var(--panel);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  .shot .frame .bar{display:flex;align-items:center;gap:.45rem;padding:.5rem .8rem;background:var(--panel2);
+    border-bottom:1px solid var(--line-soft)}
+  .shot .frame .bar i{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .shot .frame .bar i:nth-child(1){background:#ff5f57}.shot .frame .bar i:nth-child(2){background:#febc2e}.shot .frame .bar i:nth-child(3){background:#28c840}
+  .shot .frame .bar span{margin-left:.5rem;font-size:.68rem;color:var(--ink-faint);font-family:ui-monospace,Consolas,monospace}
+  .shot .frame img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+  .shot figcaption{margin-top:.7rem;font-size:.78rem;color:var(--ink-faint);text-align:center;letter-spacing:.02em}
+  figure.shot.half{flex:1}
+  .media-two{display:flex;flex-direction:column;gap:1.6vh;flex:1;min-height:0}
+
+  /* ---------- org tree ---------- */
+  .org{display:flex;flex-direction:column;align-items:center;gap:.7rem;margin-top:2.4vh;width:100%}
+  .org .row{display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap}
+  .org .node{border-radius:10px;padding:.55rem 1.1rem;font-size:.85rem;text-align:center;min-width:130px}
+  .org .node.root{background:var(--accent);color:#fff;font-weight:700}
+  .org .node.brand{background:var(--panel2);border:1px solid rgba(230,57,70,.5);color:var(--ink)}
+  .org .node.site{background:var(--panel);border:1px solid var(--line);color:var(--ink-dim)}
+  .org .node.site b{color:var(--ink)}
+  .org .link{width:2px;height:.8rem;background:var(--line)}
+  .org .cap{font-size:.72rem;color:var(--ink-faint);letter-spacing:.1em;text-transform:uppercase;margin-top:.6rem}
+
+  /* ---------- roles table ---------- */
+  table.roles{width:100%;border-collapse:collapse;margin-top:2.2vh;font-size:.88rem}
+  table.roles th{text-align:left;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);
+    padding:.5rem .8rem;border-bottom:1px solid var(--line)}
+  table.roles td{padding:.62rem .8rem;border-bottom:1px solid var(--line-soft);color:var(--ink-dim)}
+  table.roles td b{color:var(--ink)}
+  table.roles tr:last-child td{border-bottom:none}
+  table.roles .tag{display:inline-block;padding:.12rem .55rem;border-radius:6px;font-size:.68rem;font-weight:700;letter-spacing:.05em}
+  .tag.central{background:rgba(230,57,70,.15);color:var(--accent-soft)}
+  .tag.site{background:rgba(93,211,158,.12);color:var(--green)}
+
+  /* ---------- anomaly table ---------- */
+  .anomalies{margin-top:2.2vh;display:flex;flex-direction:column;gap:.6rem}
+  .anomaly{display:flex;align-items:center;gap:1rem;background:var(--panel);border:1px solid var(--line-soft);
+    border-radius:10px;padding:.7rem 1rem;font-size:.9rem}
+  .anomaly .city{width:110px;font-weight:700;color:var(--ink)}
+  .anomaly .count{width:80px;color:var(--ink-dim)}
+  .anomaly .bar{flex:1;height:8px;border-radius:99px;background:var(--panel2);overflow:hidden}
+  .anomaly .bar i{display:block;height:100%;border-radius:99px}
+  .anomaly .risk{width:70px;text-align:right;font-weight:700}
+  .anomaly .sev{font-size:.68rem;letter-spacing:.08em;color:var(--ink-faint);width:96px;text-align:right}
+
+  /* ---------- model cards ---------- */
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;margin-top:2.6vh}
+  .card{background:var(--panel);border:1px solid var(--line-soft);border-radius:14px;padding:1.3rem 1.4rem;
+    display:flex;flex-direction:column;gap:.6rem}
+  .card h3{font-size:1rem;color:var(--ink);font-weight:700}
+  .card h3 span{color:var(--accent-soft)}
+  .card p{font-size:.85rem;color:var(--ink-dim);line-height:1.5;flex:1}
+  .card .price{font-family:Georgia,serif;font-size:1.7rem;color:var(--ink)}
+  .card .price small{font-size:.8rem;color:var(--ink-faint)}
+  .card.hl{border-color:rgba(230,57,70,.55);background:linear-gradient(160deg,rgba(230,57,70,.10),var(--panel) 55%)}
+
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:.9rem;margin-top:2.6vh}
+  .kpi{background:var(--panel);border:1px solid var(--line-soft);border-radius:12px;padding:1rem;text-align:center}
+  .kpi .num{font-family:Georgia,serif;font-size:1.7rem;font-weight:700;color:var(--accent-soft)}
+  .kpi .lbl{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:.45rem;line-height:1.4}
+
+  /* ---------- roadmap ---------- */
+  .road{list-style:none;margin-top:2.4vh;display:flex;flex-direction:column;gap:0;border-left:2px solid var(--line);padding-left:0}
+  .road li{position:relative;padding:.55rem 0 .55rem 1.8rem;font-size:.95rem;color:var(--ink-dim)}
+  .road li::before{content:"";position:absolute;left:-7px;top:.95rem;width:12px;height:12px;border-radius:50%;background:var(--bg);border:3px solid var(--accent)}
+  .road li b{color:var(--ink)}
+  .road li .when{font-size:.68rem;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:.15rem}
+  .road li.now::before{background:var(--accent)}
+
+  /* ---------- phones ---------- */
+  .phones{display:flex;gap:3vw;justify-content:center;align-items:stretch;flex:1;min-height:0}
+  .phone{width:min(31vw,300px);border-radius:26px;border:1px solid var(--line);background:var(--panel);
+    padding:1.1rem 1.2rem;display:flex;flex-direction:column;gap:.5rem;box-shadow:0 24px 60px rgba(0,0,0,.5);position:relative}
+  .phone::before{content:"";position:absolute;top:.65rem;left:50%;transform:translateX(-50%);width:90px;height:16px;
+    background:var(--panel2);border-radius:99px}
+  .phone .ph{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent-soft);font-weight:700;margin-top:.9rem}
+  .phone h3{font-size:1rem;color:var(--ink)}
+  .phone ul{list-style:none;display:flex;flex-direction:column;gap:.4rem;margin-top:.3rem}
+  .phone ul li{font-size:.78rem;color:var(--ink-dim);padding-left:1.1rem;position:relative;line-height:1.4}
+  .phone ul li::before{content:"✓";position:absolute;left:0;color:var(--green);font-weight:700}
+  .phone .login{border-top:1px dashed var(--line);margin-top:.5rem;padding-top:.6rem;font-size:.7rem;color:var(--ink-faint);
+    font-family:ui-monospace,Consolas,monospace}
+
+  /* ---------- chrome / bottom bar ---------- */
+  #chrome{position:fixed;left:0;right:0;bottom:0;z-index:10;display:flex;align-items:center;gap:1rem;
+    padding:.85rem 2rem;background:rgba(13,17,23,.92);backdrop-filter:blur(8px);border-top:1px solid var(--line-soft)}
+  #prog{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent-soft));z-index:11;width:0;transition:width .3s ease}
+  #chrome .logo{font-family:Georgia,serif;font-weight:700;font-size:1.05rem;color:var(--ink);letter-spacing:.02em}
+  #chrome .logo b{color:var(--accent-soft)}
+  #chrome .spacer{flex:1}
+  #chrome button{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;
+    width:38px;height:38px;font-size:1.1rem;cursor:pointer;transition:all .15s}
+  #chrome button:hover:not(:disabled){background:var(--accent);border-color:var(--accent);color:#fff}
+  #chrome button:disabled{opacity:.3;cursor:default}
+  #chrome .ctr{font-variant-numeric:tabular-nums;font-size:.85rem;color:var(--ink-dim);min-width:74px;text-align:center}
+  #chrome .ctr b{color:var(--ink)}
+  #chrome .hint{font-size:.72rem;color:var(--ink-faint);letter-spacing:.04em}
+  #chrome .hint kbd{background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:.05rem .4rem;font-size:.68rem;color:var(--ink-dim)}
+
+  /* ---------- title slide ---------- */
+  .slide.title{align-items:center;justify-content:center;text-align:center;padding-bottom:12vh}
+  .slide.title h1{font-size:clamp(2.6rem,7.2vh,5.4rem);max-width:24ch}
+  .slide.title .sub{margin-top:2.4vh;font-size:clamp(1.05rem,2.4vh,1.5rem);color:var(--ink-dim)}
+  .slide.title .case{margin-top:6vh;display:inline-flex;align-items:center;gap:1.4rem;padding:1rem 1.8rem;
+    border:1px solid rgba(230,57,70,.45);border-radius:14px;background:rgba(230,57,70,.07)}
+  .slide.title .case .big{font-family:Georgia,serif;font-size:1.5rem;color:var(--ink)}
+  .slide.title .case .sm{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);margin-top:.2rem}
+  .slide.title .foot{margin-top:4vh;font-size:.75rem;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase}
+  .logo-big{display:flex;align-items:center;gap:.7rem;margin-bottom:3.6vh}
+  .logo-big .mark{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--accent),#b71c2c);
+    display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-weight:700;font-size:1.5rem;color:#fff;
+    box-shadow:0 10px 26px rgba(230,57,70,.4)}
+  .logo-big .nm{font-family:Georgia,serif;font-size:1.6rem;font-weight:700;letter-spacing:.03em}
+  .logo-big .nm b{color:var(--accent-soft)}
+
+  /* ---------- cta ---------- */
+  .slide.cta{align-items:center;justify-content:center;text-align:center}
+  .slide.cta h1{font-size:clamp(2.4rem,6vh,4.6rem)}
+  .cta-row{margin-top:4vh;display:flex;gap:1.2rem;align-items:center;justify-content:center}
+  .btn{display:inline-block;padding:.9rem 2.2rem;border-radius:10px;font-weight:700;font-size:1rem;text-decoration:none;transition:all .15s}
+  .btn.primary{background:var(--accent);color:#fff;box-shadow:0 12px 30px rgba(230,57,70,.35)}
+  .btn.primary:hover{background:#ff4d5e;transform:translateY(-2px)}
+  .btn.ghost{border:1px solid var(--line);color:var(--ink-dim)}
+  .btn.ghost:hover{border-color:var(--accent);color:var(--ink)}
+  .cta-note{margin-top:3vh;font-size:.8rem;color:var(--ink-faint)}
+
+  /* section tag in top-right */
+  .sec-tag{position:absolute;top:6vh;right:6vw;font-size:.66rem;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-faint)}
+
+  @media (max-width:900px){
+    .slide-body{flex-direction:column;gap:2vh;overflow-y:auto}
+    .col-text,.col-media{width:100%}
+    .grid3,.kpis{grid-template-columns:repeat(2,1fr)}
+    .phones{flex-direction:row;flex-wrap:wrap}
+  }
+</style>
+</head>
+<body>
+<div id="prog"></div>
+<div id="deck">
+
+<!-- ══════════════ 1 · TITLE ══════════════ -->
+<section class="slide title active">
+  <div class="logo-big">
+    <div class="mark">O</div>
+    <div class="nm">Omni<b>Ops</b></div>
+  </div>
+  <h1>One Platform for the <span class="amp">Entire</span> Restaurant Operation</h1>
+  <div class="sub">POS · Kitchen · Staff · Maintenance · Quality · Signage · Surveys · Revenue intelligence<br>in a single, integrated, multi-tenant system</div>
+  <div class="case">
+    <div>
+      <div class="big">Case study · Vishal Multicuisine</div>
+      <div class="sm">11 cities · one operation · live on the platform today</div>
+    </div>
+  </div>
+  <div class="foot">Live product demo — every screen captured from the running platform</div>
+</section>
+
+<!-- ══════════════ 2 · THE PROBLEM ══════════════ -->
+<section class="slide">
+  <span class="sec-tag">01 · The problem</span>
+  <div class="kicker">Where most chains are stuck</div>
+  <h1>10+ disconnected point solutions.<br>No single source of truth.</h1>
+  <p class="lede">A typical multi-location group runs a patchwork of tools that never talk to each other — and every gap becomes a leak, a delay, or a standards failure.</p>
+  <div class="chips">
+    <span class="chip off">POS / ordering</span>
+    <span class="chip off">Kitchen display</span>
+    <span class="chip off">Staff shifts</span>
+    <span class="chip off">Payments</span>
+    <span class="chip off">Maintenance CMMS</span>
+    <span class="chip off">Quality audits</span>
+    <span class="chip off">Digital signage</span>
+    <span class="chip off">Customer surveys</span>
+    <span class="chip off">Analytics</span>
+    <span class="chip off">Inventory</span>
+  </div>
+  <div class="slide-body">
+    <div class="col-text">
+      <ul class="pts small">
+        <li><b>Integration overhead</b> — every new tool needs plumbing to every other tool; most pairs never get connected</li>
+        <li><b>Data silos</b> — a dish can't flow from menu to kitchen to payment to analytics inside one system</li>
+        <li><b>No cross-branch visibility</b> — head office can't compare sites, standards, or revenue hygiene in real time</li>
+        <li><b>Zero integration = zero trust</b> — anomalies hide in the seams between systems</li>
+      </ul>
+    </div>
+    <div class="col-media">
+      <div class="stats">
+        <div class="stat"><div class="num">10+</div><div class="lbl">Point solutions to replace</div></div>
+        <div class="stat"><div class="num">N</div><div class="lbl">Integrations to build &amp; maintain</div></div>
+        <div class="stat"><div class="num">0</div><div class="lbl">Single source of truth</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 3 · THE PLATFORM ══════════════ -->
+<section class="slide">
+  <span class="sec-tag">02 · The platform</span>
+  <div class="kicker">What OmniOps is</div>
+  <h1>One login. One database.<br>Real-time <span class="amp">cross-module</span> data.</h1>
+  <p class="lede">OmniOps replaces the patchwork with one integrated operations platform — built multi-tenant from day one, for groups of 10 to 500+ outlets.</p>
+  <div class="slide-body">
+    <div class="col-text">
+      <ul class="pts">
+        <li><b>One login, one console</b> — every module, every site, every role in a single system</li>
+        <li><b>Real-time by design</b> — an order placed at the counter reaches the kitchen display, payment, revenue assurance and analytics without a single integration</li>
+        <li><b>Owner console + central team + site teams</b> — one hierarchy, granular role-based access</li>
+        <li><b>Modules à la carte</b> — switch capabilities on/off per site, per brand</li>
+      </ul>
+    </div>
+    <div class="col-media">
+      <figure class="shot">
+        <div class="frame"><div class="bar"><i></i><i></i><i></i><span>omnio.ps — one workspace for the whole group</span></div>
+          <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:18px;background:var(--bg2)">
+            <div class="stat" style="margin:0"><div class="num">1</div><div class="lbl">Database</div></div>
+            <div class="stat" style="margin:0"><div class="num">1</div><div class="lbl">Login</div></div>
+            <div class="stat" style="margin:0"><div class="num">∞</div><div class="lbl">Modules</div></div>
+            <div class="stat" style="margin:0"><div class="num">0</div><div class="lbl">Integrations</div></div>
+          </div>
+        </div>
+        <figcaption>Integrated modules share one tenant-scoped database — nothing to stitch together</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 4 · MULTI-TENANT ORG ══════════════ -->
+<section class="slide">
+  <span class="sec-tag">03 · How it's structured</span>
+  <div class="kicker">Built for groups, not single stores</div>
+  <h1>One tenant hierarchy:<br>owner console · central team · site teams</h1>
+  <div class="org">
+    <div class="row"><div class="node root">Platform — Owner Console</div></div>
+    <div class="link"></div>
+    <div class="row"><div class="node brand">Tenant · Vishal Multicuisine<br><span style="font-size:.7rem;color:var(--ink-faint)">11 sites · 48 users</span></div></div>
+    <div class="link"></div>
+    <div class="row">
+      <div class="node site"><b>Mumbai</b><br><span style="font-size:.68rem">manager · kds.south · kds.north · foh</span></div>
+      <div class="node site"><b>Delhi NCR</b></div>
+      <div class="node site"><b>Bengaluru</b></div>
+      <div class="node site"><b>Lucknow</b></div>
+      <div class="node site"><b>Hyderabad</b> <span class="dim" style="font-size:.66rem">… + 6 more</span></div>
+    </div>
+    <div class="cap">Every site gets its own team; head office sees everything</div>
+  </div>
+</section>
+
+<!-- ══════════════ 5 · ADMINISTRATION ══════════════ -->
+<section class="slide">
+  <span class="sec-tag">04 · Product tour</span>
+  <div class="kicker">Administration</div>
+  <h2>The Vishal org chart — 11 branches, one console</h2>
+  <div class="slide-body">
+    <div class="col-media">
+      <figure class="shot">
+        <div class="frame"><div class="bar"><i></i><i></i><i></i><span>omniops — /admin/sites</span></div>
+          <img src="/pitch/assets/shot-admin-sites.png" alt="OmniOps admin sites list showing all 11 Vishal Multicuisine branches"></div>
+        <figcaption>Live view — tenant, sites, users and go-live status in one list</figcaption>
+      </figure>
+    </div>
+    <div class="col-text">
+      <ul class="pts small">
+        <li><b>11 branches</b> — Mumbai, Delhi NCR, Bengaluru, Hyderabad, Chennai, Kolkata, Pune, Ahmedabad, Jaipur, Surat, Lucknow</li>
+        <li><b>48 users</b> across central and site roles, each scoped to their site</li>
+        <li><b>Onboard in bulk</b> — CSV import, then a guided go-live workflow</li>
+        <li><b>Configure per site</b> — modules, cuisine, tax and banking details live in one place</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 6 · MENU & POS ══════════════ -->
+<section class="slide">
+  <span class="sec-tag">04 · Product tour</span>
+  <div class="kicker">Menu &amp; POS</div>
+  <h2>40 products, 4 categories — priced and routed automatically</h2>
+  <div class="slide-body">
+    <div class="col-text">
+      <ul class="pts small">
+        <li><b>40-item menu in 4 categories</b> — South Indian, North Indian, Desserts, Beverages</li>
+        <li><b>Each category mapped to a kitchen station</b> — GRILL · FRY · DESSERT · DRINKS — the order routes itself</li>
+        <li><b>Modifiers, auto-pricing and discounts</b> handled inside the order flow</li>
+        <li><b>Order → kitchen → payment</b> in one real-time pipeline</li>
+      </ul>
+    </div>
+    <div class="col-media">
+      <div class="media-two">
+        <figure class="shot half">
+          <div class="frame"><div class="bar"><i></i><i></i><i></i><span>omniops — Mumbai /pos</span></div>
+            <img src="/pitch/assets/shot-pos.png" alt="OmniOps POS screen for Vishal Multicuisine Mumbai"></div>
+          <figcaption>POS — Mumbai branch, live</figcaption>
+        </figure>
+        <figure class="shot half">
+          <div class="frame"><div class="bar"><i></i><i></i><i></i><span>omniops — Mumbai /menu</span></div>
+            <img src="/pitch/assets/shot-menu.png" alt="OmniOps menu management with 4 categories"></div>
+          <figcaption>Menu — 4 categories, priced and station-routed</figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 7 · KDS ══════════════ -->
+<section class="slide">
+  <span class="sec-tag">04 · Product tour</span>
+  <div class="kicker">Kitchen Display</div>
+  <h2>The kitchen, live — independent station queues</h2>
+  <div class="slide-body">
+    <div class="col-media">
+      <figure class="shot">
+        <div class="frame"><div class="bar"><i></i><i></i><i></i><span>omniops — Mumbai /kds</span></div>
+          <img src="/pitch/assets/shot-kds.png" alt="OmniOps kitchen display with station queues for Vishal Multicuisine Mumbai"></div>
+        <figcaption>Live kitchen queue — items routed to Grill · Fry · Desserts · Beverages stations</figcaption>
+      </figure>
+    </div>
+    <div class="col-text">
+      <ul class="pts small">
+        <li><b>Station routing</b> — every item lands on the right station's queue automatically</li>
+        <li><b>Real-time via Socket.io</b> — new orders appear the moment they're taken</li>
+        <li><b>Timers &amp; bump bar</b> — track age of every ticket; bump items as they plate</li>
+        <li><b>Live right now</b> — Grill 3 · Fry 3 · Beverages 2 · Desserts 2 items in queue</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 8 · QUALITY & SAFETY ══════════════ -->
+<section class="slide">
+  <span class="sec-tag">04 · Product tour</span>
+  <div class="kicker">Quality &amp; Safety</div>
+  <h2>HACCP audits, scores and CAPA — not a checklist, a system</h2>
+  <div class="slide-body">
+    <div class="col-text">
+      <ul class="pts small">
+        <li><b>Completed audit in the demo</b> — Lucknow Daily HACCP: score <b>86.7</b>, 9 checks, signed off by the central QA auditor</li>
+        <li><b>Templates</b> — Food Safety HACCP and Service &amp; Hospitality standards, with weighted sections and scoring engine</li>
+        <li><b>Photo evidence</b> attached to every finding</li>
+        <li><b>CAPA workflow</b> — corrective actions raised from audit findings and tracked to closure</li>
+      </ul>
+    </div>
+    <div class="col-media">
+      <figure class="shot">
+        <div class="frame"><div class="bar"><i></i><i></i><i></i><span>omniops — Lucknow /quality/audits</span></div>
+          <img src="/pitch/assets/shot-quality.png" alt="OmniOps quality audits page showing completed HACCP audit for Lucknow"></div>
+        <figcaption>Quality — Lucknow branch HACCP audit completed on the live platform</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 9 · REVENUE ASSURANCE ══════════════ -->
+<section class="slide">
+  <span class="sec-tag">04 · Product tour</span>
+  <div class="kicker">Revenue Assurance</div>
+  <h2>19 anomalies caught across the network — before they hit the P&amp;L</h2>
+  <p class="lede" style="margin-top:1vh">Five detection rules watch every order: missing payments, void/refund spikes, discount outliers, payment mismatches, no-sale orders. Real seeded numbers from the live demo:</p>
+  <div class="anomalies">
+    <div class="anomaly"><span class="city">Mumbai</span><span class="count">3 anomalies</span>
+      <div class="bar"><i style="width:25%;background:var(--gold)"></i></div><span class="risk" style="color:var(--gold)">25</span><span class="sev">risk / 100</span></div>
+    <div class="anomaly"><span class="city">Bengaluru</span><span class="count">3 anomalies</span>
+      <div class="bar"><i style="width:100%;background:var(--accent)"></i></div><span class="risk" style="color:var(--accent-soft)">100</span><span class="sev">risk / 100</span></div>
+    <div class="anomaly"><span class="city">Delhi NCR</span><span class="count">2 anomalies</span>
+      <div class="bar"><i style="width:20%;background:var(--gold)"></i></div><span class="risk" style="color:var(--gold)">20</span><span class="sev">risk / 100</span></div>
+    <div class="anomaly"><span class="city">Lucknow</span><span class="count">3 anomalies</span>
+      <div class="bar"><i style="width:26%;background:var(--gold)"></i></div><span class="risk" style="color:var(--gold)">26</span><span class="sev">risk / 100</span></div>
+  </div>
+  <div class="slide-body" style="margin-top:2vh">
+    <div class="col-media" style="flex:1.15">
+      <figure class="shot">
+        <div class="frame"><div class="bar"><i></i><i></i><i></i><span>omniops — Mumbai /revenue-assurance</span></div>
+          <img src="/pitch/assets/shot-revenue-assurance.png" alt="OmniOps revenue assurance anomaly dashboard for Mumbai"></div>
+        <figcaption>Revenue assurance — Mumbai: 3 flagged anomalies, risk score 25</figcaption>
+      </figure>
+    </div>
+    <div class="col-text" style="flex:1">
+      <ul class="pts small">
+        <li>Severity tiers — <b>HIGH · MEDIUM · LOW</b> — with per-category breakdowns and dollar values</li>
+        <li>Bengaluru's <b>₹1,766 in void/refund spikes</b> pushed its risk score to 100 — flagged, not missed</li>
+        <li>Every anomaly links to its order for one-click investigation</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 10 · EXEC ANALYTICS + FORECASTING ══════════════ -->
+<section class="slide">
+  <span class="sec-tag">04 · Product tour</span>
+  <div class="kicker">Intelligence</div>
+  <h2>Executive analytics &amp; AI-assisted demand forecasting</h2>
+  <div class="slide-body">
+    <div class="col-media">
+      <div class="media-two">
+        <figure class="shot half">
+          <div class="frame"><div class="bar"><i></i><i></i><i></i><span>omniops — /admin/analytics</span></div>
+            <img src="/pitch/assets/shot-exec-analytics.png" alt="OmniOps executive analytics across all sites"></div>
+          <figcaption>Exec analytics — tenant-wide overview with per-site ranking</figcaption>
+        </figure>
+        <figure class="shot half">
+          <div class="frame"><div class="bar"><i></i><i></i><i></i><span>omniops — Mumbai /forecasting</span></div>
+            <img src="/pitch/assets/shot-forecasting.png" alt="OmniOps demand forecast for Mumbai"></div>
+          <figcaption>Forecasting — 7/14/30-day outlook with confidence bounds</figcaption>
+        </figure>
+      </div>
+    </div>
+    <div class="col-text">
+      <ul class="pts small">
+        <li><b>Tenant-wide overview</b> — revenue, orders, avg check, anomalies and NPS on one screen</li>
+        <li><b>Per-site comparison with ranks</b> — spot the laggard before it becomes a problem</li>
+        <li><b>Cross-module</b> — orders + revenue assurance + surveys in a single view</li>
+        <li><b>Demand forecast</b> — day-of-week seasonality + trend model with honest confidence bounds</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 11 · SURVEYS + SIGNAGE ══════════════ -->
+<section class="slide">
+  <span class="sec-tag">04 · Product tour</span>
+  <div class="kicker">Guest &amp; brand surfaces</div>
+  <h2>Surveys &amp; digital signage</h2>
+  <div class="slide-body">
+    <div class="col-media">
+      <div class="media-two">
+        <figure class="shot half">
+          <div class="frame"><div class="bar"><i></i><i></i><i></i><span>omniops — Mumbai /surveys</span></div>
+            <img src="/pitch/assets/shot-surveys.png" alt="OmniOps surveys page for Mumbai"></div>
+          <figcaption>Surveys — NPS / CSAT templates published per site</figcaption>
+        </figure>
+        <figure class="shot half">
+          <div class="frame"><div class="bar"><i></i><i></i><i></i><span>omniops — Mumbai /signage</span></div>
+            <img src="/pitch/assets/shot-signage.png" alt="OmniOps digital signage content page for Mumbai"></div>
+          <figcaption>Signage — content library with approval + daypart scheduling</figcaption>
+        </figure>
+      </div>
+    </div>
+    <div class="col-text">
+      <ul class="pts small">
+        <li><b>Survey builder</b> — NPS, CSAT, star ratings, single/multiple choice, free text</li>
+        <li><b>QR / kiosk ready</b> — public link with no login for guests</li>
+        <li><b>NPS/CSAT analytics</b> feed straight into exec analytics</li>
+        <li><b>Signage CMS</b> — approval workflow, daypart scheduling, screen health</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 12 · MOBILE APPS ══════════════ -->
+<section class="slide">
+  <span class="sec-tag">04 · Product tour</span>
+  <div class="kicker">Mobile</div>
+  <h2>Two apps, one platform — guest &amp; staff</h2>
+  <div class="slide-body">
+    <div class="col-text">
+      <ul class="pts small">
+        <li><b>Guest app</b> — take surveys by QR or deep link; all six question types, thank-you flow</li>
+        <li><b>Staff app</b> — login, role-gated dashboard, shift view, maintenance tickets with status transitions</li>
+        <li><b>Same backend, same RBAC</b> — what a user can see in the web app is exactly what the app shows</li>
+        <li>One codebase (Expo/React Native) — iOS &amp; Android bundles verified</li>
+      </ul>
+    </div>
+    <div class="col-media">
+      <div class="phones">
+        <div class="phone">
+          <div class="ph">Guest app</div>
+          <h3>Survey taking</h3>
+          <ul>
+            <li>Star ratings &amp; NPS</li>
+            <li>Multiple &amp; single choice</li>
+            <li>Free-text feedback</li>
+            <li>Deep-link &amp; QR entry</li>
+            <li>Thank-you confirmation</li>
+          </ul>
+          <div class="login">QR code → take survey in 30s</div>
+        </div>
+        <div class="phone">
+          <div class="ph">Staff app</div>
+          <h3>Operations on the go</h3>
+          <ul>
+            <li>Role-gated login</li>
+            <li>Live shift view</li>
+            <li>Maintenance tickets</li>
+            <li>Status transitions</li>
+            <li>Site-scoped data</li>
+          </ul>
+          <div class="login">maria@demokitchen.co · Staff123!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 13 · FIELD REPORTS + MAINTENANCE ══════════════ -->
+<section class="slide">
+  <span class="sec-tag">04 · Product tour</span>
+  <div class="kicker">Field operations</div>
+  <h2>Field reports &amp; maintenance CMMS</h2>
+  <div class="slide-body">
+    <div class="col-media">
+      <div class="media-two">
+        <figure class="shot half">
+          <div class="frame"><div class="bar"><i></i><i></i><i></i><span>omniops — Mumbai /field-reports</span></div>
+            <img src="/pitch/assets/shot-field-reports.png" alt="OmniOps field reports list for Mumbai"></div>
+          <figcaption>Field reports — mobile-first form + status workflow</figcaption>
+        </figure>
+        <figure class="shot half">
+          <div class="frame"><div class="bar"><i></i><i></i><i></i><span>omniops — Mumbai /maintenance</span></div>
+            <img src="/pitch/assets/shot-maintenance.png" alt="OmniOps maintenance tickets for Mumbai"></div>
+          <figcaption>Maintenance — assets, tickets, vendors, PM schedules</figcaption>
+        </figure>
+      </div>
+    </div>
+    <div class="col-text">
+      <ul class="pts small">
+        <li><b>Field reporting</b> — create, list and transition reports with server-validated status flow</li>
+        <li><b>Maintenance CMMS</b> — assets, SLA-bounded tickets, vendors, preventive-maintenance schedules</li>
+        <li><b>Tenant-isolated</b> — each site only sees its own assets and tickets</li>
+        <li><b>Staff mobile</b> — ticket transitions are in the staff app too</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 14 · PROOF ══════════════ -->
+<section class="slide">
+  <span class="sec-tag">05 · Proof</span>
+  <div class="kicker">From the live demo</div>
+  <h1>This isn't a mockup.<br>It's the running product.</h1>
+  <p class="lede">Every number below is live on the platform right now, from the Vishal Multicuisine demo tenant.</p>
+  <div class="stats">
+    <div class="stat"><div class="num">11</div><div class="lbl">Branches live</div></div>
+    <div class="stat"><div class="num">48</div><div class="lbl">Users, central + site</div></div>
+    <div class="stat"><div class="num">40</div><div class="lbl">Products · 4 categories</div></div>
+    <div class="stat"><div class="num">4</div><div class="lbl">Kitchen stations routing</div></div>
+    <div class="stat"><div class="num">34</div><div class="lbl">Orders in the pipeline</div></div>
+    <div class="stat danger"><div class="num">19</div><div class="lbl">Anomalies caught</div></div>
+    <div class="stat ok"><div class="num">86.7</div><div class="lbl">HACCP audit score · Lucknow</div></div>
+    <div class="stat"><div class="num">2</div><div class="lbl">CAPAs tracked to closure</div></div>
+  </div>
+  <div class="slide-body" style="margin-top:2vh">
+    <div class="col-text">
+      <ul class="pts small">
+        <li><b>Real order flow</b> — orders created in the POS hit the kitchen queue in real time</li>
+        <li><b>Real anomalies caught</b> — ₹1,766 void/refund spike in Bengaluru, missing payment in Mumbai, discount outlier in Delhi</li>
+        <li><b>Real audits</b> — HACCP completed by the central quality auditor, with a CAPA raised</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 15 · SECURITY & MULTI-TENANCY ══════════════ -->
+<section class="slide">
+  <span class="sec-tag">06 · Trust</span>
+  <div class="kicker">Security &amp; multi-tenancy</div>
+  <h1>Role-based access, enforced at the API — not just the UI</h1>
+  <div class="slide-body">
+    <div class="col-text" style="flex:1.2">
+      <ul class="pts small">
+        <li><b>Tenant isolation verified</b> — a site team literally cannot read another site's data; every query is scoped server-side</li>
+        <li><b>RBAC at the API layer</b> — guards on every endpoint, roles in the JWT, not a frontend flag</li>
+        <li><b>Central vs site roles</b> — brand manager sees the network; a site lead sees one site</li>
+      </ul>
+      <table class="roles">
+        <tr><th>Role</th><th>Scope</th><th>Example login (demo)</th></tr>
+        <tr><td><b>Brand Manager</b></td><td><span class="tag central">CENTRAL</span> whole network</td><td>vishal.owner@vishalmc.in</td></tr>
+        <tr><td><b>Quality Auditor</b></td><td><span class="tag central">CENTRAL</span> audits all sites</td><td>vishal.quality@vishalmc.in</td></tr>
+        <tr><td><b>Site Lead</b></td><td><span class="tag site">SITE</span> own branch</td><td>mumbai.manager@vishalmc.in</td></tr>
+        <tr><td><b>Kitchen Staff</b></td><td><span class="tag site">SITE</span> own station</td><td>mumbai.kds.south@vishalmc.in</td></tr>
+      </table>
+    </div>
+    <div class="col-media">
+      <div class="stats">
+        <div class="stat"><div class="num">100%</div><div class="lbl">Endpoints RBAC-guarded</div></div>
+        <div class="stat"><div class="num">JWT</div><div class="lbl">Session auth + role claims</div></div>
+        <div class="stat"><div class="num">44</div><div class="lbl">Tables, tenant-scoped</div></div>
+        <div class="stat ok"><div class="num">108</div><div class="lbl">QC checks passed</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 16 · COMMERCIAL MODEL ══════════════ -->
+<section class="slide">
+  <span class="sec-tag">07 · Commercial</span>
+  <div class="kicker">Simple, predictable pricing</div>
+  <h1>Per-site/month SaaS — <span class="amp">à la carte</span> modules</h1>
+  <div class="grid3">
+    <div class="card">
+      <h3>Core <span>·</span></h3>
+      <div class="price">Per site / month</div>
+      <p>POS &amp; orders, kitchen display, staff &amp; shifts, payments — the essentials every branch needs, one subscription</p>
+    </div>
+    <div class="card hl">
+      <h3>Modules <span>· à la carte</span></h3>
+      <div class="price">Turn on / off <small>per site</small></div>
+      <p>Quality audits, maintenance CMMS, digital signage, surveys, revenue assurance, forecasting — license only what each branch needs</p>
+    </div>
+    <div class="card">
+      <h3>Services <span>·</span></h3>
+      <div class="price">One-time &amp; optional</div>
+      <p>Onboarding &amp; setup fees, white-label branding per brand, premium support SLAs — plus volume pricing as you scale</p>
+    </div>
+  </div>
+  <p class="lede" style="font-size:clamp(.95rem,1.8vh,1.1rem);margin-top:2.4vh">Priced per site, not per seat — so head office doesn't pay for a tool a branch doesn't use. Add a module to one site, ten sites, or the whole network.</p>
+</section>
+
+<!-- ══════════════ 17 · KPIs + ROADMAP ══════════════ -->
+<section class="slide">
+  <span class="sec-tag">08 · Business</span>
+  <div class="kicker">The numbers we run on</div>
+  <h1>What we track — and what's next</h1>
+  <div class="kpis">
+    <div class="kpi"><div class="num">MRR</div><div class="lbl">Monthly recurring revenue / ARR</div></div>
+    <div class="kpi"><div class="num">NRR</div><div class="lbl">Net revenue retention</div></div>
+    <div class="kpi"><div class="num">Sites</div><div class="lbl">Live + in onboarding</div></div>
+    <div class="kpi"><div class="num">DAS</div><div class="lbl">Daily active sites transacting</div></div>
+    <div class="kpi"><div class="num">Attach</div><div class="lbl">Paid modules per site</div></div>
+  </div>
+  <ul class="road">
+    <li class="now"><span class="when">Now</span><b>Pilot onboarding</b> — Vishal demo is the reference deployment; first paying tenant next</li>
+    <li><span class="when">Next</span><b>Production hosting &amp; real Stripe billing</b> — live subscriptions instead of mock gateway</li>
+    <li><span class="when">Then</span><b>Marketplace &amp; partner integrations</b> — the platform as a distribution point</li>
+    <li><span class="when">Scale</span><b>Hardening</b> — automated test suite, CI, observability, 24/7 SLA monitoring</li>
+  </ul>
+</section>
+
+<!-- ══════════════ 18 · CLOSING CTA ══════════════ -->
+<section class="slide cta">
+  <div class="kicker" style="justify-content:center">Let's get started</div>
+  <h1>Let's launch your <span class="amp">first 10 sites</span>.</h1>
+  <p class="lede" style="margin:2.4vh auto 0;text-align:center">Vishal Multicuisine runs 11 branches on OmniOps today. Your network can be live in weeks — same platform, your brand, your standards.</p>
+  <div class="cta-row">
+    <a class="btn primary" href="https://ba06d713f8d926f71e1e7c24de5b5f38.ctonew.app" target="_blank" rel="noopener">Explore the live platform</a>
+    <a class="btn ghost" href="https://ba06d713f8d926f71e1e7c24de5b5f38.ctonew.app/login" target="_blank" rel="noopener">Sign in to the demo</a>
+  </div>
+  <div class="cta-note">Demo login: vishal.owner@vishalmc.in · Staff123! — or ask for a guided walkthrough</div>
+  <div class="foot" style="margin-top:5vh;font-size:.72rem;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase">OmniOps — one platform for the entire restaurant operation</div>
+</section>
+
+</div><!-- /deck -->
+
+<div id="chrome">
+  <div class="logo">Omni<b>Ops</b></div>
+  <div class="hint">Pitch · Vishal Multicuisine case study</div>
+  <div class="spacer"></div>
+  <button id="prev" title="Previous (←)" aria-label="Previous slide">←</button>
+  <div class="ctr"><b id="cur">1</b> / <span id="tot">18</span></div>
+  <button id="next" title="Next (→)" aria-label="Next slide">→</button>
+  <div class="hint" style="margin-left:1rem"><kbd>F</kbd> fullscreen · <kbd>←</kbd><kbd>→</kbd> navigate</div>
+</div>
+
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var cur = 0, total = slides.length;
+  var curEl = document.getElementById('cur'), totEl = document.getElementById('tot');
+  var prog = document.getElementById('prog');
+  var prevBtn = document.getElementById('prev'), nextBtn = document.getElementById('next');
+  totEl.textContent = total;
+
+  function show(n){
+    cur = Math.max(0, Math.min(total - 1, n));
+    slides.forEach(function(s,i){ s.classList.toggle('active', i === cur); });
+    curEl.textContent = cur + 1;
+    prog.style.width = ((cur + 1) / total * 100) + '%';
+    prevBtn.disabled = cur === 0;
+    nextBtn.disabled = cur === total - 1;
+    try{ history.replaceState(null,'','#' + (cur+1)); }catch(e){}
+  }
+  function next(){ show(cur + 1); }
+  function prev(){ show(cur - 1); }
+
+  prevBtn.addEventListener('click', prev);
+  nextBtn.addEventListener('click', next);
+
+  document.addEventListener('keydown', function(e){
+    switch(e.key){
+      case 'ArrowRight': case 'ArrowDown': case ' ': case 'PageDown': case 'Enter':
+        e.preventDefault(); next(); break;
+      case 'ArrowLeft': case 'ArrowUp': case 'PageUp': e.preventDefault(); prev(); break;
+      case 'Home': e.preventDefault(); show(0); break;
+      case 'End': e.preventDefault(); show(total - 1); break;
+      case 'f': case 'F':
+        if(!document.fullscreenElement){ document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(function(){}); }
+        else { document.exitFullscreen && document.exitFullscreen(); }
+        break;
+    }
+  });
+
+  var start = parseInt((location.hash||'').replace('#',''), 10);
+  show(isNaN(start) ? 0 : start - 1);
+
+  // touch swipe
+  var x0 = null;
+  document.addEventListener('touchstart', function(e){ x0 = e.touches[0].clientX; }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if(x0 === null) return;
+    var dx = e.changedTouches[0].clientX - x0;
+    if(Math.abs(dx) > 60){ dx < 0 ? next() : prev(); }
+    x0 = null;
+  }, {passive:true});
+})();
+</script>
+</body>
+</html>

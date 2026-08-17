@@ -1,0 +1,25 @@
+export enum AuditItemType {
+  PASS_FAIL = 'PASS_FAIL',
+  SCORE_1_5 = 'SCORE_1_5',
+  TEMPERATURE = 'TEMPERATURE',
+  PHOTO_REQUIRED = 'PHOTO_REQUIRED',
+  YES_NO = 'YES_NO',
+}
+export enum AuditStatus {
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  REVIEWED = 'REVIEWED',
+  CLOSED = 'CLOSED',
+}
+export enum CAPAPriority {
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
+  CRITICAL = 'CRITICAL',
+}
+export enum CAPAStatus {
+  OPEN = 'OPEN',
+  IN_PROGRESS = 'IN_PROGRESS',
+  RESOLVED = 'RESOLVED',
+  VERIFIED = 'VERIFIED',
+}

@@ -1,0 +1,7 @@
+export enum TableStatus {
+  AVAILABLE = 'AVAILABLE',
+  OCCUPIED = 'OCCUPIED',
+  RESERVED = 'RESERVED',
+  DIRTY = 'DIRTY',
+  OUT_OF_SERVICE = 'OUT_OF_SERVICE',
+}

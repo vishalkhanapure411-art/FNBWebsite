@@ -1,0 +1,32 @@
+export enum AssetStatus {
+  OPERATIONAL = 'OPERATIONAL',
+  NEEDS_REPAIR = 'NEEDS_REPAIR',
+  UNDER_MAINTENANCE = 'UNDER_MAINTENANCE',
+  DECOMMISSIONED = 'DECOMMISSIONED',
+}
+
+export enum TicketPriority {
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
+  CRITICAL = 'CRITICAL',
+}
+
+export enum TicketStatus {
+  OPEN = 'OPEN',
+  ASSIGNED = 'ASSIGNED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  ON_HOLD = 'ON_HOLD',
+  RESOLVED = 'RESOLVED',
+  CLOSED = 'CLOSED',
+}
+
+export enum MaintenanceFrequency {
+  DAILY = 'DAILY',
+  WEEKLY = 'WEEKLY',
+  BIWEEKLY = 'BIWEEKLY',
+  MONTHLY = 'MONTHLY',
+  QUARTERLY = 'QUARTERLY',
+  BIANNUAL = 'BIANNUAL',
+  ANNUAL = 'ANNUAL',
+}

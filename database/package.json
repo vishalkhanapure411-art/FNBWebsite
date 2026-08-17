@@ -1,0 +1,28 @@
+{
+  "name": "@omniops/database",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:validate": "prisma validate",
+    "db:studio": "prisma studio",
+    "clean": "rm -rf node_modules"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^3.0.3"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
+    "prisma": "^5.22.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0"
+  },
+  "prisma": {
+    "schema": "prisma/schema/schema.prisma",
+    "seed": "tsx prisma/seed.ts"
+  }
+}
