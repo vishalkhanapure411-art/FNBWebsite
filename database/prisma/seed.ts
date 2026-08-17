@@ -1013,6 +1013,46 @@ async function main() {
   }
   console.log(`  ✅ Users: ${vmCentralUsers.length} central + ${vmSiteUserCount} site-level (${vmCities.length} branches × 4)`);
 
+  // ─── 7.3b Vishal marketing users (MARKETING_ADMIN — media managers for the advertising screens) ───
+  // One central marketing lead (tenant-level, global content) + one per branch (site-scoped).
+  const vmMarketingCentral = await prisma.user.create({
+    data: {
+      id: 'u-vm-marketing',
+      tenantId: vmTenant.id,
+      email: 'vishal.marketing@vishalmc.in',
+      passwordHash: staffPasswordHash,
+      firstName: 'Marketing',
+      lastName: 'Central',
+      role: 'MARKETING_ADMIN' as never,
+      status: 'ACTIVE',
+      lastLoginAt: new Date(),
+    },
+  });
+  console.log(
+    `  ✅ User: ${vmMarketingCentral.firstName} ${vmMarketingCentral.lastName} (MARKETING_ADMIN, central) — ${vmMarketingCentral.email}`,
+  );
+
+  let vmMarketingSiteCount = 0;
+  for (const c of vmCities) {
+    const marketing = await prisma.user.create({
+      data: {
+        id: `u-vm-${c.slug}-marketing`,
+        tenantId: vmTenant.id,
+        siteId: vmSites.get(c.slug)!.id,
+        email: `${c.slug}.marketing@vishalmc.in`,
+        passwordHash: staffPasswordHash,
+        firstName: c.city,
+        lastName: 'Marketing',
+        role: 'MARKETING_ADMIN' as never,
+        status: 'ACTIVE',
+        lastLoginAt: new Date(),
+      },
+    });
+    vmMarketingSiteCount += 1;
+    console.log(`  ✅ User: ${marketing.firstName} ${marketing.lastName} (MARKETING_ADMIN — ${vmSites.get(c.slug)!.id}) — ${marketing.email}`);
+  }
+  console.log(`  ✅ Users: 1 central MARKETING_ADMIN + ${vmMarketingSiteCount} site MARKETING_ADMINs (${vmCities.length} branches)`);
+
   // ─── 7.4 Vishal menu (40 items, 4 categories → 4 KDS stations) ───
   const vmMenu = await prisma.menu.create({
     data: {

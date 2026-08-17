@@ -23,6 +23,35 @@ export class SignageService {
   // ══════════════════════════════════════════════════
 
   async createContent(dto: CreateContentDto, user: any) {
+    // Site-scoped users (e.g. a branch MARKETING_ADMIN) may only create content
+    // for their own site; central users may scope content to any site in their
+    // tenant (or leave it null for global/tenant-wide content).
+    let siteId: string | null = null;
+    if (user.siteId) {
+      if (dto.siteId && dto.siteId !== user.siteId) {
+        throw new ForbiddenException('Site-scoped users can only create content for their own site');
+      }
+      siteId = user.siteId;
+    } else {
+      siteId = dto.siteId ?? null;
+    }
+
+    let tenantId: string | null = user.tenantId ?? null;
+    if (siteId) {
+      const site = await this.prisma.site.findUnique({
+        where: { id: siteId },
+        select: { tenantId: true },
+      });
+      if (!site) throw new BadRequestException('Site not found');
+      if (user.tenantId && site.tenantId !== user.tenantId) {
+        throw new ForbiddenException('Site does not belong to your tenant');
+      }
+      tenantId = site.tenantId; // derive from site (covers SUPER_ADMIN with no tenantId)
+    }
+    if (!tenantId) {
+      throw new ForbiddenException('Cannot create signage content without a tenant');
+    }
+
     return this.prisma.signageContent.create({
       data: {
         title: dto.title,
@@ -31,9 +60,9 @@ export class SignageService {
         mediaUrl: dto.mediaUrl,
         thumbnailUrl: dto.thumbnailUrl,
         duration: dto.duration ?? 10,
-        tenantId: user.tenantId,
-        submittedById: user.id,
-        siteId: dto.siteId,
+        tenantId,
+        submittedById: user.sub ?? '',
+        siteId,
         playlistId: dto.playlistId,
         status: SignageContentStatus.DRAFT,
       },
@@ -41,25 +70,32 @@ export class SignageService {
   }
 
   async getContents(query: QueryContentDto, user: any) {
-    const where: any = {};
-    
-    // Tenant scoping
+    // Tenant scoping (API-layer isolation, no DB RLS)
+    const and: any[] = [];
     if (user.tenantId) {
-      where.tenantId = user.tenantId;
+      and.push({ tenantId: user.tenantId });
+    }
+
+    // Site-scoped users see only their own site's content plus global (siteId null) content
+    if (user.siteId) {
+      and.push({ OR: [{ siteId: user.siteId }, { siteId: null }] });
+    } else if (query.siteId) {
+      and.push({ siteId: query.siteId });
     }
 
     if (query.status) {
-      where.status = query.status;
-    }
-    if (query.siteId) {
-      where.siteId = query.siteId;
+      and.push({ status: query.status });
     }
     if (query.search) {
-      where.OR = [
-        { title: { contains: query.search, mode: 'insensitive' } },
-        { description: { contains: query.search, mode: 'insensitive' } },
-      ];
+      and.push({
+        OR: [
+          { title: { contains: query.search, mode: 'insensitive' } },
+          { description: { contains: query.search, mode: 'insensitive' } },
+        ],
+      });
     }
+
+    const where = and.length ? { AND: and } : {};
 
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
@@ -103,10 +139,15 @@ export class SignageService {
     return content;
   }
 
-  async updateContent(id: string, dto: UpdateContentDto) {
+  async updateContent(id: string, dto: UpdateContentDto, user: any) {
     const content = await this.prisma.signageContent.findUnique({ where: { id } });
     if (!content) throw new NotFoundException('Content not found');
-    
+
+    // Site-scoped users may only update content belonging to their own site
+    if (user.siteId && content.siteId !== user.siteId) {
+      throw new ForbiddenException('Site-scoped users can only update content for their own site');
+    }
+
     return this.prisma.signageContent.update({
       where: { id },
       data: { ...dto },
@@ -211,22 +252,55 @@ export class SignageService {
   // ══════════════════════════════════════════════════
 
   async createPlaylist(dto: CreatePlaylistDto, user: any) {
+    // Site-scoped users may only create playlists for their own site
+    let siteId: string | null = null;
+    if (user.siteId) {
+      if (dto.siteId && dto.siteId !== user.siteId) {
+        throw new ForbiddenException('Site-scoped users can only create playlists for their own site');
+      }
+      siteId = user.siteId;
+    } else {
+      siteId = dto.siteId ?? null;
+    }
+
+    let tenantId: string | null = user.tenantId ?? null;
+    if (siteId) {
+      const site = await this.prisma.site.findUnique({
+        where: { id: siteId },
+        select: { tenantId: true },
+      });
+      if (!site) throw new BadRequestException('Site not found');
+      if (user.tenantId && site.tenantId !== user.tenantId) {
+        throw new ForbiddenException('Site does not belong to your tenant');
+      }
+      tenantId = site.tenantId;
+    }
+    if (!tenantId) {
+      throw new ForbiddenException('Cannot create a signage playlist without a tenant');
+    }
+
     return this.prisma.signagePlaylist.create({
       data: {
         name: dto.name,
-        tenantId: user.tenantId,
-        siteId: dto.siteId,
+        tenantId,
+        siteId,
       },
     });
   }
 
   async getPlaylists(user: any, siteId?: string) {
-    const where: any = {};
-    if (user.tenantId) where.tenantId = user.tenantId;
-    if (siteId) where.siteId = siteId;
+    const and: any[] = [];
+    if (user.tenantId) and.push({ tenantId: user.tenantId });
+
+    // Site-scoped users see only their own site's playlists plus global (siteId null) playlists
+    if (user.siteId) {
+      and.push({ OR: [{ siteId: user.siteId }, { siteId: null }] });
+    } else if (siteId) {
+      and.push({ siteId });
+    }
 
     return this.prisma.signagePlaylist.findMany({
-      where,
+      where: and.length ? { AND: and } : {},
       include: {
         _count: { select: { contents: true } },
         site: { select: { id: true, name: true } },
@@ -235,9 +309,14 @@ export class SignageService {
     });
   }
 
-  async updatePlaylist(id: string, dto: UpdatePlaylistDto) {
+  async updatePlaylist(id: string, dto: UpdatePlaylistDto, user: any) {
     const playlist = await this.prisma.signagePlaylist.findUnique({ where: { id } });
     if (!playlist) throw new NotFoundException('Playlist not found');
+
+    // Site-scoped users may only update playlists belonging to their own site
+    if (user.siteId && playlist.siteId !== user.siteId) {
+      throw new ForbiddenException('Site-scoped users can only update playlists for their own site');
+    }
 
     return this.prisma.signagePlaylist.update({
       where: { id },
@@ -263,6 +342,21 @@ export class SignageService {
   // ══════════════════════════════════════════════════
 
   async createSchedule(dto: CreateScheduleDto, user: any) {
+    // Site-scoped users may only create schedules for their own site
+    if (user.siteId && dto.siteId !== user.siteId) {
+      throw new ForbiddenException('Site-scoped users can only create schedules for their own site');
+    }
+    if (user.tenantId) {
+      const site = await this.prisma.site.findUnique({
+        where: { id: dto.siteId },
+        select: { tenantId: true },
+      });
+      if (!site) throw new BadRequestException('Site not found');
+      if (site.tenantId !== user.tenantId) {
+        throw new ForbiddenException('Site does not belong to your tenant');
+      }
+    }
+
     return this.prisma.signageSchedule.create({
       data: {
         playlistId: dto.playlistId,

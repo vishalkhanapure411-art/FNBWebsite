@@ -10,7 +10,7 @@ export default function LoginPage() {
       <div
         aria-hidden="true"
         className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/backgrounds/login.jpg')" }}
+        style={{ backgroundImage: "url('/backgrounds/login-v1.png')" }}
       />
       {/* Subtle dark overlay for card contrast (light & dark mode) */}
       <div aria-hidden="true" className="absolute inset-0 bg-black/50" />

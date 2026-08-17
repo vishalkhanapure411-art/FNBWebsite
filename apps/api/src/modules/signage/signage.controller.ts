@@ -66,8 +66,8 @@ export class SignageController {
   @Patch('content/:id')
   @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER)
   @ApiOperation({ summary: 'Update content' })
-  updateContent(@Param('id') id: string, @Body() dto: UpdateContentDto) {
-    return this.signageService.updateContent(id, dto);
+  updateContent(@Param('id') id: string, @Body() dto: UpdateContentDto, @CurrentUser() user: any) {
+    return this.signageService.updateContent(id, dto, user);
   }
 
   @Post('content/:id/submit')
@@ -134,8 +134,8 @@ export class SignageController {
   @Patch('playlists/:id')
   @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER)
   @ApiOperation({ summary: 'Update playlist' })
-  updatePlaylist(@Param('id') id: string, @Body() dto: UpdatePlaylistDto) {
-    return this.signageService.updatePlaylist(id, dto);
+  updatePlaylist(@Param('id') id: string, @Body() dto: UpdatePlaylistDto, @CurrentUser() user: any) {
+    return this.signageService.updatePlaylist(id, dto, user);
   }
 
   @Post('playlists/:id/content')
