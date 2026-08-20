@@ -29,15 +29,16 @@ import {
 } from './dto';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { Role } from '@omniops/shared';
+import { Role, TENANT_ADMIN_ROLES } from '@omniops/shared';
 
 const AUDITOR_ROLES = [
   Role.SUPER_ADMIN,
   Role.BRAND_MANAGER,
+  ...TENANT_ADMIN_ROLES,
   Role.SITE_LEAD,
   Role.QUALITY_AUDITOR,
 ];
-const TEMPLATE_EDITOR_ROLES = [Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.QUALITY_AUDITOR];
+const TEMPLATE_EDITOR_ROLES = [Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.QUALITY_AUDITOR];
 
 @ApiTags('Quality')
 @Controller('quality')

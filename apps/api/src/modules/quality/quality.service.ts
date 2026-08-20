@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { Role, AuditItemType, AuditStatus, CAPAStatus } from '@omniops/shared';
 import {
@@ -16,7 +16,7 @@ import {
   ResolveCapaDto,
 } from './dto';
 
-type UserCtx = { tenantId: string | null; role: Role; sub?: string; email?: string };
+type UserCtx = { tenantId: string | null; role: Role; sub?: string; email?: string; siteId?: string | null };
 
 const VALID_AUDIT_TRANSITIONS: Record<string, string[]> = {
   IN_PROGRESS: ['COMPLETED'],
@@ -32,6 +32,12 @@ export class QualityService {
   private tenantWhere(user: UserCtx): Record<string, unknown> {
     return user.role === Role.SUPER_ADMIN ? {} : { tenantId: user.tenantId! };
   }
+  // Site-scoped users (SITE_LEAD / site QA) may only operate on their own site.
+  private enforceSiteScope(siteId: string | null | undefined, user: UserCtx) {
+    if (user.siteId && user.role !== Role.SUPER_ADMIN && siteId && siteId !== user.siteId) {
+      throw new ForbiddenException('You do not have access to this site');
+    }
+  }
 
   private async verifyTemplateAccess(templateId: string, user: UserCtx) {
     const template = await this.prisma.auditTemplate.findUnique({ where: { id: templateId } });
@@ -46,6 +52,7 @@ export class QualityService {
     if (!site || (user.role !== Role.SUPER_ADMIN && site.tenantId !== user.tenantId)) {
       throw new NotFoundException('Site not found');
     }
+    this.enforceSiteScope(site.id, user);
     return site;
   }
 
@@ -54,17 +61,19 @@ export class QualityService {
     if (!audit || (user.role !== Role.SUPER_ADMIN && audit.tenantId !== user.tenantId)) {
       throw new NotFoundException('Audit not found');
     }
+    this.enforceSiteScope(audit.siteId, user);
     return audit;
   }
 
   private async verifyCapaAccess(capaId: string, user: UserCtx) {
     const capa = await this.prisma.cAPA.findUnique({
       where: { id: capaId },
-      include: { audit: { select: { tenantId: true } } },
+      include: { audit: { select: { tenantId: true, siteId: true } } },
     });
     if (!capa || (user.role !== Role.SUPER_ADMIN && capa.audit.tenantId !== user.tenantId)) {
       throw new NotFoundException('CAPA not found');
     }
+    this.enforceSiteScope(capa.audit.siteId, user);
     return capa;
   }
 
@@ -280,7 +289,14 @@ export class QualityService {
     filters?: { siteId?: string; status?: string; from?: string; to?: string; page?: number; limit?: number },
   ) {
     const where: Record<string, unknown> = this.tenantWhere(user);
-    if (filters?.siteId) where.siteId = filters.siteId;
+    if (user.siteId && user.role !== Role.SUPER_ADMIN) {
+      if (filters?.siteId && filters.siteId !== user.siteId) {
+        throw new ForbiddenException('You do not have access to this site');
+      }
+      where.siteId = user.siteId;
+    } else if (filters?.siteId) {
+      where.siteId = filters.siteId;
+    }
     if (filters?.status) where.status = filters.status;
     if (filters?.from || filters?.to) {
       const startedAt: Record<string, Date> = {};
@@ -332,6 +348,7 @@ export class QualityService {
     if (!audit || (user.role !== Role.SUPER_ADMIN && audit.tenantId !== user.tenantId)) {
       throw new NotFoundException('Audit not found');
     }
+    this.enforceSiteScope(audit.siteId, user);
     return { success: true, data: audit };
   }
 
@@ -458,10 +475,17 @@ export class QualityService {
     user: UserCtx,
     filters?: { status?: string; assignedToId?: string; siteId?: string; page?: number; limit?: number },
   ) {
+    let siteFilter = filters?.siteId;
+    if (user.siteId && user.role !== Role.SUPER_ADMIN) {
+      if (siteFilter && siteFilter !== user.siteId) {
+        throw new ForbiddenException('You do not have access to this site');
+      }
+      siteFilter = user.siteId;
+    }
     const where: Record<string, unknown> = {
       audit: {
         ...(user.role === Role.SUPER_ADMIN ? {} : { tenantId: user.tenantId! }),
-        ...(filters?.siteId ? { siteId: filters.siteId } : {}),
+        ...(siteFilter ? { siteId: siteFilter } : {}),
       },
     };
     if (filters?.status) where.status = filters.status;

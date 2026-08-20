@@ -5,7 +5,7 @@ import { ForecastingService } from './forecasting.service';
 import { ForecastingQueryDto } from './dto/forecasting-query.dto';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { Role } from '@omniops/shared';
+import { Role, TENANT_ADMIN_ROLES } from '@omniops/shared';
 
 /**
  * DEMAND FORECASTING — site-scoped statistical forecast of daily revenue and
@@ -22,7 +22,7 @@ export class ForecastingController {
   constructor(private readonly forecastingService: ForecastingService) {}
 
   @Get('demand')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
   @ApiOperation({
     summary:
       'AI-assisted demand forecast: daily revenue + orders per site (statistical model: weekday seasonality + dampened linear trend) with confidence bounds',

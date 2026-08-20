@@ -23,12 +23,13 @@ import {
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Public } from '../../common/decorators/public.decorator';
-import { Role } from '@omniops/shared';
+import { Role, TENANT_ADMIN_ROLES } from '@omniops/shared';
 
-const SURVEY_MANAGER_ROLES = [Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.MARKETING_ADMIN];
+const SURVEY_MANAGER_ROLES = [Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.MARKETING_ADMIN];
 const SURVEY_VIEWER_ROLES = [
   Role.SUPER_ADMIN,
   Role.BRAND_MANAGER,
+  ...TENANT_ADMIN_ROLES,
   Role.MARKETING_ADMIN,
   Role.SITE_LEAD,
 ];

@@ -1,4 +1,4 @@
-export { Role, UserStatus } from './roles';
+export { Role, UserStatus, TENANT_ADMIN_ROLES } from './roles';
 export { Permission } from './permissions';
 export { SubscriptionTier, TenantStatus } from './tenant';
 export { SiteType, SiteStatus } from './site';

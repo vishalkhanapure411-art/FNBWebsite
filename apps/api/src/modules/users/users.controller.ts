@@ -17,7 +17,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { Role } from '@omniops/shared';
+import { Role, TENANT_ADMIN_ROLES } from '@omniops/shared';
 
 @ApiTags('Users')
 @Controller('users')
@@ -27,7 +27,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD, Role.HR_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.HR_ADMIN)
   @ApiOperation({ summary: 'List users (tenant-scoped; SUPER_ADMIN sees all)' })
   findAll(
     @Req() req: { tenantScope: { tenantId: string | null } },
@@ -38,7 +38,7 @@ export class UsersController {
   }
 
   @Post()
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD, Role.HR_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.HR_ADMIN)
   @ApiOperation({ summary: 'Create a new user (tenant-scoped)' })
   create(
     @Req() req: { tenantScope: { tenantId: string | null } },
@@ -48,7 +48,7 @@ export class UsersController {
   }
 
   @Get(':id')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD, Role.HR_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.HR_ADMIN)
   @ApiOperation({ summary: 'Get user by ID' })
   findOne(
     @Req() req: { tenantScope: { tenantId: string | null } },
@@ -58,7 +58,7 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD, Role.HR_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.HR_ADMIN)
   @ApiOperation({ summary: 'Update user' })
   update(
     @Req() req: { tenantScope: { tenantId: string | null } },
@@ -69,7 +69,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.HR_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.HR_ADMIN)
   @ApiOperation({ summary: 'Soft-delete user (sets status=INACTIVE)' })
   remove(
     @Req() req: { tenantScope: { tenantId: string | null } },
@@ -79,7 +79,7 @@ export class UsersController {
   }
 
   @Patch(':id/permissions')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Update granular permission overrides for a user' })
   updatePermissions(
     @Req() req: { tenantScope: { tenantId: string | null } },

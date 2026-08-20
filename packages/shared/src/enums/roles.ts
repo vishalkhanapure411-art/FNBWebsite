@@ -1,6 +1,10 @@
 export enum Role {
   SUPER_ADMIN = 'SUPER_ADMIN',
+  FRANCHISE_OWNER = 'FRANCHISE_OWNER',
   BRAND_MANAGER = 'BRAND_MANAGER',
+  OPERATIONS_MANAGER = 'OPERATIONS_MANAGER',
+  FINANCE_MANAGER = 'FINANCE_MANAGER',
+  REVENUE_ASSURANCE = 'REVENUE_ASSURANCE',
   SITE_LEAD = 'SITE_LEAD',
   KITCHEN_STAFF = 'KITCHEN_STAFF',
   FOH = 'FOH',
@@ -10,6 +14,15 @@ export enum Role {
   MARKETING_ADMIN = 'MARKETING_ADMIN',
   CUSTOMER = 'CUSTOMER',
 }
+
+// Tenant-wide management roles. These mirror BRAND_MANAGER's access on
+// tenant-level management routes (exact-role matching; no hierarchy in the
+// RolesGuard — this is a plain list used to keep @Roles(...) lists in sync).
+export const TENANT_ADMIN_ROLES = [
+  Role.FRANCHISE_OWNER,
+  Role.OPERATIONS_MANAGER,
+  Role.FINANCE_MANAGER,
+] as const;
 
 export enum UserStatus {
   ACTIVE = 'ACTIVE',

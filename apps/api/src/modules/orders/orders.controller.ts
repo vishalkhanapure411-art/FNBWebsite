@@ -22,7 +22,7 @@ import {
 } from './dto';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { Role } from '@omniops/shared';
+import { Role, TENANT_ADMIN_ROLES } from '@omniops/shared';
 
 @ApiTags('Orders')
 @Controller('orders')
@@ -32,14 +32,14 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD, Role.FOH)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.FOH)
   @ApiOperation({ summary: 'Create an order with items, compute totals, generate order number' })
   create(@Body() dto: CreateOrderDto, @Req() req: Request) {
     return this.ordersService.create(dto, req.user as any);
   }
 
   @Get('kitchen-queue')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD, Role.KITCHEN_STAFF)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.KITCHEN_STAFF)
   @ApiOperation({ summary: 'Get active orders grouped by station (KDS feed)' })
   kitchenQueue(@Query('siteId') siteId: string, @Req() req: Request) {
     if (!siteId) return { success: true, data: {} };
@@ -47,21 +47,21 @@ export class OrdersController {
   }
 
   @Get()
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD, Role.FOH, Role.KITCHEN_STAFF)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.FOH, Role.KITCHEN_STAFF)
   @ApiOperation({ summary: 'List orders with filtering and pagination' })
   findAll(@Query() query: QueryOrdersDto, @Req() req: Request) {
     return this.ordersService.findAll(query, req.user as any);
   }
 
   @Get(':id')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD, Role.FOH, Role.KITCHEN_STAFF)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.FOH, Role.KITCHEN_STAFF)
   @ApiOperation({ summary: 'Get full order detail with items, discounts, payments' })
   findById(@Param('id') id: string, @Req() req: Request) {
     return this.ordersService.findById(id, req.user as any);
   }
 
   @Patch(':id/status')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD, Role.FOH, Role.KITCHEN_STAFF)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.FOH, Role.KITCHEN_STAFF)
   @ApiOperation({ summary: 'Update order status with transition validation' })
   updateStatus(
     @Param('id') id: string,
@@ -72,14 +72,14 @@ export class OrdersController {
   }
 
   @Post(':id/items')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD, Role.FOH)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.FOH)
   @ApiOperation({ summary: 'Add item to existing order (recalculate totals)' })
   addItem(@Param('id') id: string, @Body() dto: AddOrderItemDto, @Req() req: Request) {
     return this.ordersService.addItem(id, dto, req.user as any);
   }
 
   @Patch(':id/items/:itemId/cancel')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD, Role.FOH)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.FOH)
   @ApiOperation({ summary: 'Cancel individual item on an order' })
   cancelItem(
     @Param('id') id: string,
@@ -90,7 +90,7 @@ export class OrdersController {
   }
 
   @Post(':id/discounts')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
   @ApiOperation({ summary: 'Apply discount to order' })
   applyDiscount(
     @Param('id') id: string,
@@ -101,7 +101,7 @@ export class OrdersController {
   }
 
   @Delete(':id/discounts/:discountId')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
   @ApiOperation({ summary: 'Remove discount from order' })
   removeDiscount(
     @Param('id') id: string,
@@ -112,7 +112,7 @@ export class OrdersController {
   }
 
   @Post(':id/cancel')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
   @ApiOperation({ summary: 'Cancel entire order' })
   cancelOrder(@Param('id') id: string, @Req() req: Request) {
     return this.ordersService.cancelOrder(id, req.user as any);

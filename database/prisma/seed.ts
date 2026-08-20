@@ -944,12 +944,13 @@ async function main() {
     console.log(`  ✅ Site: ${site.name} (${site.id})`);
   }
 
-  // ─── 7.3 Vishal users (4 central + 40 site-level) ───
+  // ─── 7.3 Vishal users (5 central + 66 site-level) ───
   const vmCentralUsers = [
-    { id: 'u-vm-owner', email: 'vishal.owner@vishalmc.in', firstName: 'Vishal', lastName: 'Owner', role: 'BRAND_MANAGER', phone: '+91-98200-00001' },
-    { id: 'u-vm-ops', email: 'vishal.ops@vishalmc.in', firstName: 'Ops', lastName: 'Central Ops', role: 'BRAND_MANAGER', phone: '+91-98200-00002' },
+    { id: 'u-vm-owner', email: 'vishal.owner@vishalmc.in', firstName: 'Vishal', lastName: 'Owner', role: 'FRANCHISE_OWNER', phone: '+91-98200-00001' },
+    { id: 'u-vm-ops', email: 'vishal.ops@vishalmc.in', firstName: 'Ops', lastName: 'Central Ops', role: 'OPERATIONS_MANAGER', phone: '+91-98200-00002' },
     { id: 'u-vm-quality', email: 'vishal.quality@vishalmc.in', firstName: 'Quality', lastName: 'Central QA', role: 'QUALITY_AUDITOR', phone: '+91-98200-00003' },
-    { id: 'u-vm-finance', email: 'vishal.finance@vishalmc.in', firstName: 'Finance', lastName: 'Central Finance', role: 'BRAND_MANAGER', phone: '+91-98200-00004' },
+    { id: 'u-vm-finance', email: 'vishal.finance@vishalmc.in', firstName: 'Finance', lastName: 'Central Finance', role: 'FINANCE_MANAGER', phone: '+91-98200-00004' },
+    { id: 'u-vm-ra', email: 'vishal.ra@vishalmc.in', firstName: 'RA', lastName: 'Central', role: 'REVENUE_ASSURANCE', phone: '+91-98200-00005' },
   ] as const;
 
   const vmCentralIds: Record<string, string> = {};
@@ -972,13 +973,15 @@ async function main() {
     console.log(`  ✅ User: ${user.firstName} ${user.lastName} (${user.role}) — ${u.email}`);
   }
 
-  // Site-level: <city>.manager (SITE_LEAD), <city>.kds.south / <city>.kds.north (KITCHEN_STAFF), <city>.foh (FOH)
-  const vmSiteUsers = new Map<string, { manager: string; kdsSouth: string; kdsNorth: string; foh: string }>();
+  // Site-level: <city>.manager (SITE_LEAD), <city>.kds.south / <city>.kds.north (KITCHEN_STAFF), <city>.foh (FOH), <city>.quality (QUALITY_AUDITOR), <city>.ra (REVENUE_ASSURANCE)
+  const vmSiteUsers = new Map<string, { manager: string; kdsSouth: string; kdsNorth: string; foh: string; quality: string; ra: string }>();
   const vmSiteUserRoles = [
     { suffix: 'kds.south', role: 'KITCHEN_STAFF', lastName: 'KDS South' },
     { suffix: 'kds.north', role: 'KITCHEN_STAFF', lastName: 'KDS North' },
     { suffix: 'manager', role: 'SITE_LEAD', lastName: 'Manager' },
     { suffix: 'foh', role: 'FOH', lastName: 'FOH' },
+    { suffix: 'quality', role: 'QUALITY_AUDITOR', lastName: 'Quality' },
+    { suffix: 'ra', role: 'REVENUE_ASSURANCE', lastName: 'RA' },
   ] as const;
   const vmSuffixKey = (suffix: string): string => {
     if (suffix === 'kds.south') return 'kdsSouth';
@@ -987,8 +990,8 @@ async function main() {
   };
   let vmSiteUserCount = 0;
   for (const c of vmCities) {
-    const ids: { manager: string; kdsSouth: string; kdsNorth: string; foh: string } = {
-      manager: '', kdsSouth: '', kdsNorth: '', foh: '',
+    const ids: { manager: string; kdsSouth: string; kdsNorth: string; foh: string; quality: string; ra: string } = {
+      manager: '', kdsSouth: '', kdsNorth: '', foh: '', quality: '', ra: '',
     };
     for (const r of vmSiteUserRoles) {
       const key = vmSuffixKey(r.suffix);
@@ -1250,7 +1253,7 @@ async function main() {
   // no-sale, fully comped. Plus 2 live KDS orders in Mumbai spanning all 4
   // stations so the kitchen-queue groups by GRILL/FRY/DESSERT/DRINKS.
   const VM_TAX = 0.05;
-  const vmUserId = (slug: string, key: 'manager' | 'kdsSouth' | 'kdsNorth' | 'foh') => vmSiteUsers.get(slug)![key];
+  const vmUserId = (slug: string, key: 'manager' | 'kdsSouth' | 'kdsNorth' | 'foh' | 'quality' | 'ra') => vmSiteUsers.get(slug)![key];
 
   interface VmOrderItem {
     menuItemId: string;

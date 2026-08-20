@@ -29,7 +29,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { Role } from '@omniops/shared';
+import { Role, TENANT_ADMIN_ROLES } from '@omniops/shared';
 
 @ApiTags('Signage')
 @Controller('signage')
@@ -43,42 +43,42 @@ export class SignageController {
   // ══════════════════════════════════════════════════
 
   @Post('content')
-  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Upload signage content' })
   createContent(@Body() dto: CreateContentDto, @CurrentUser() user: any) {
     return this.signageService.createContent(dto, user);
   }
 
   @Get('content')
-  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
   @ApiOperation({ summary: 'List signage content' })
   getContents(@Query() query: QueryContentDto, @CurrentUser() user: any) {
     return this.signageService.getContents(query, user);
   }
 
   @Get('content/:id')
-  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
   @ApiOperation({ summary: 'Get content detail with approval history' })
   getContentById(@Param('id') id: string) {
     return this.signageService.getContentById(id);
   }
 
   @Patch('content/:id')
-  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Update content' })
   updateContent(@Param('id') id: string, @Body() dto: UpdateContentDto, @CurrentUser() user: any) {
     return this.signageService.updateContent(id, dto, user);
   }
 
   @Post('content/:id/submit')
-  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Submit content for approval' })
   submitForApproval(@Param('id') id: string, @CurrentUser() user: any) {
     return this.signageService.submitForApproval(id, user);
   }
 
   @Post('content/:id/approve')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD, Role.MARKETING_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.MARKETING_ADMIN)
   @ApiOperation({ summary: 'Approve content' })
   approveContent(
     @Param('id') id: string,
@@ -89,7 +89,7 @@ export class SignageController {
   }
 
   @Post('content/:id/reject')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD, Role.MARKETING_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.MARKETING_ADMIN)
   @ApiOperation({ summary: 'Reject content' })
   rejectContent(
     @Param('id') id: string,
@@ -100,14 +100,14 @@ export class SignageController {
   }
 
   @Post('content/:id/go-live')
-  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Set content live' })
   goLive(@Param('id') id: string, @CurrentUser() user: any) {
     return this.signageService.goLive(id, user);
   }
 
   @Post('content/:id/expire')
-  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Expire content' })
   expireContent(@Param('id') id: string, @CurrentUser() user: any) {
     return this.signageService.expireContent(id, user);
@@ -118,28 +118,28 @@ export class SignageController {
   // ══════════════════════════════════════════════════
 
   @Post('playlists')
-  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Create playlist' })
   createPlaylist(@Body() dto: CreatePlaylistDto, @CurrentUser() user: any) {
     return this.signageService.createPlaylist(dto, user);
   }
 
   @Get('playlists')
-  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
   @ApiOperation({ summary: 'List playlists' })
   getPlaylists(@Query('siteId') siteId: string, @CurrentUser() user: any) {
     return this.signageService.getPlaylists(user, siteId);
   }
 
   @Patch('playlists/:id')
-  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Update playlist' })
   updatePlaylist(@Param('id') id: string, @Body() dto: UpdatePlaylistDto, @CurrentUser() user: any) {
     return this.signageService.updatePlaylist(id, dto, user);
   }
 
   @Post('playlists/:id/content')
-  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Add content to playlist' })
   addContentToPlaylist(@Param('id') id: string, @Body() dto: AddContentToPlaylistDto) {
     return this.signageService.addContentToPlaylist(id, dto);
@@ -150,28 +150,28 @@ export class SignageController {
   // ══════════════════════════════════════════════════
 
   @Post('schedules')
-  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Create schedule' })
   createSchedule(@Body() dto: CreateScheduleDto, @CurrentUser() user: any) {
     return this.signageService.createSchedule(dto, user);
   }
 
   @Get('schedules/:siteId')
-  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
   @ApiOperation({ summary: 'List schedules for a site' })
   getSchedules(@Param('siteId') siteId: string) {
     return this.signageService.getSchedules(siteId);
   }
 
   @Patch('schedules/:id')
-  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Update schedule' })
   updateSchedule(@Param('id') id: string, @Body() dto: UpdateScheduleDto) {
     return this.signageService.updateSchedule(id, dto);
   }
 
   @Delete('schedules/:id')
-  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Delete schedule' })
   deleteSchedule(@Param('id') id: string) {
     return this.signageService.deleteSchedule(id);
@@ -193,7 +193,7 @@ export class SignageController {
   // ══════════════════════════════════════════════════
 
   @Get('screens/:siteId')
-  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
   @ApiOperation({ summary: 'List screens for a site' })
   getScreens(@Param('siteId') siteId: string) {
     return this.signageService.getScreens(siteId);

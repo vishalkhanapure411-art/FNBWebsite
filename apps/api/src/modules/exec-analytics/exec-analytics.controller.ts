@@ -5,7 +5,7 @@ import { ExecAnalyticsService } from './exec-analytics.service';
 import { ExecAnalyticsQueryDto } from './dto/exec-analytics-query.dto';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { Role } from '@omniops/shared';
+import { Role, TENANT_ADMIN_ROLES } from '@omniops/shared';
 
 /**
  * EXEC ANALYTICS — tenant-wide, cross-site analytics for executives.
@@ -23,14 +23,14 @@ export class ExecAnalyticsController {
   constructor(private readonly execAnalyticsService: ExecAnalyticsService) {}
 
   @Get('overview')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Tenant-wide KPIs: revenue, orders, anomalies, NPS + revenue trend' })
   getOverview(@Query() query: ExecAnalyticsQueryDto, @Req() req: Request) {
     return this.execAnalyticsService.getOverview(query, req.user as any);
   }
 
   @Get('site-comparison')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Per-site comparison with revenue and anomaly ranks' })
   getSiteComparison(@Query() query: ExecAnalyticsQueryDto, @Req() req: Request) {
     return this.execAnalyticsService.getSiteComparison(query, req.user as any);

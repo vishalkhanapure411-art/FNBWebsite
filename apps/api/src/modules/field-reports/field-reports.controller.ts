@@ -20,17 +20,18 @@ import {
 } from './dto';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { Role } from '@omniops/shared';
+import { Role, TENANT_ADMIN_ROLES } from '@omniops/shared';
 
 // Field staff submit reports; management reviews them.
 const FIELD_STAFF_ROLES = [
   Role.SUPER_ADMIN,
   Role.BRAND_MANAGER,
+  ...TENANT_ADMIN_ROLES,
   Role.SITE_LEAD,
   Role.MAINTENANCE_TECH,
   Role.QUALITY_AUDITOR,
 ];
-const MANAGEMENT_ROLES = [Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD];
+const MANAGEMENT_ROLES = [Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD];
 
 @ApiTags('Field Reports')
 @Controller('field-reports')

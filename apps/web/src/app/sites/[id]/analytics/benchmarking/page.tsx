@@ -27,9 +27,13 @@ export default function BenchmarkingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [tenantId, setTenantId] = useState<string>('');
 
-  // Access control: only SUPER_ADMIN and BRAND_MANAGER
+  // Access control: only SUPER_ADMIN, BRAND_MANAGER and tenant-wide management roles
   const canAccess =
-    user?.role === Role.SUPER_ADMIN || user?.role === Role.BRAND_MANAGER;
+    user?.role === Role.SUPER_ADMIN ||
+    user?.role === Role.BRAND_MANAGER ||
+    user?.role === Role.FRANCHISE_OWNER ||
+    user?.role === Role.OPERATIONS_MANAGER ||
+    user?.role === Role.FINANCE_MANAGER;
 
   const fetchData = useCallback(async () => {
     if (!canAccess || !tenantId) {

@@ -19,7 +19,7 @@ import {
 } from './dto/analytics-query.dto';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { Role } from '@omniops/shared';
+import { Role, TENANT_ADMIN_ROLES } from '@omniops/shared';
 
 @ApiTags('Analytics')
 @Controller('analytics')
@@ -29,35 +29,35 @@ export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
   @Get('sales/summary')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD, Role.FOH)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.FOH)
   @ApiOperation({ summary: 'Get sales summary with period breakdown' })
   getSalesSummary(@Query() query: SalesSummaryQueryDto, @Req() req: Request) {
     return this.analyticsService.getSalesSummary(query, req.user as any);
   }
 
   @Get('sales/realtime')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD, Role.FOH)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.FOH)
   @ApiOperation({ summary: 'Get realtime today stats' })
   getRealtime(@Query() query: SalesRealtimeQueryDto, @Req() req: Request) {
     return this.analyticsService.getRealtime(query, req.user as any);
   }
 
   @Get('menu/performance')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD, Role.FOH)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.FOH)
   @ApiOperation({ summary: 'Get menu item performance analytics' })
   getMenuPerformance(@Query() query: MenuPerformanceQueryDto, @Req() req: Request) {
     return this.analyticsService.getMenuPerformance(query, req.user as any);
   }
 
   @Get('costs')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
   @ApiOperation({ summary: 'Get food and labor cost analytics' })
   getCosts(@Query() query: CostsQueryDto, @Req() req: Request) {
     return this.analyticsService.getCosts(query, req.user as any);
   }
 
   @Get('reports/export')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
   @ApiOperation({ summary: 'Export analytics report as CSV or JSON' })
   async exportReport(
     @Query() query: ReportExportQueryDto,
@@ -80,7 +80,7 @@ export class AnalyticsController {
   }
 
   @Get('benchmarking')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Cross-site benchmarking comparison' })
   getBenchmarking(@Query() query: BenchmarkingQueryDto, @Req() req: Request) {
     return this.analyticsService.getBenchmarking(query, req.user as any);

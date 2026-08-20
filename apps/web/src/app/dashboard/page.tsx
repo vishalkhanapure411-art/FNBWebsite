@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/auth-provider';
 import { Permission } from '@omniops/shared';
+import { roleLabel } from '@/lib/roles';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -40,7 +41,7 @@ export default function DashboardPage() {
           <p className="text-surface-600 dark:text-surface-400 mt-1">
             Welcome back, {user.firstName} {user.lastName}
             <span className="ml-2 inline-flex items-center rounded-md bg-surface-100 dark:bg-surface-700 px-2 py-0.5 text-xs font-medium text-surface-600 dark:text-surface-300">
-              {user.role.replace(/_/g, ' ')}
+              {roleLabel(user.role)}
             </span>
           </p>
         </div>

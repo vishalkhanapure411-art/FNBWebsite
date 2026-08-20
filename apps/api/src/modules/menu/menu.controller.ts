@@ -29,7 +29,7 @@ import {
 } from './dto';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { Role } from '@omniops/shared';
+import { Role, TENANT_ADMIN_ROLES } from '@omniops/shared';
 
 @ApiTags('Menu')
 @Controller('menu')
@@ -43,56 +43,56 @@ export class MenuController {
   // ══════════════════════════════════════════════════
 
   @Post()
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Create a menu' })
   create(@Body() dto: CreateMenuDto) {
     return this.menuService.create(dto);
   }
 
   @Get()
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
   @ApiOperation({ summary: 'List menus with filtering' })
   findAll(@Query() query: QueryMenuDto, @Req() req: Request) {
     return this.menuService.findAll(query, req.user as any);
   }
 
   @Get('available/:siteId')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD, Role.FOH, Role.KITCHEN_STAFF, Role.CUSTOMER)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.FOH, Role.KITCHEN_STAFF, Role.CUSTOMER)
   @ApiOperation({ summary: 'Get available menu for a site (customer/POS facing)' })
   getAvailable(@Param('siteId') siteId: string, @Req() req: Request) {
     return this.menuService.getAvailableMenu(siteId, req.user as any);
   }
 
   @Get(':id')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
   @ApiOperation({ summary: 'Get menu with categories, items, modifiers' })
   findById(@Param('id') id: string, @Req() req: Request) {
     return this.menuService.findById(id, req.user as any);
   }
 
   @Patch(':id')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Update menu details' })
   update(@Param('id') id: string, @Body() dto: UpdateMenuDto, @Req() req: Request) {
     return this.menuService.update(id, dto, req.user as any);
   }
 
   @Delete(':id')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Soft-delete a menu' })
   remove(@Param('id') id: string, @Req() req: Request) {
     return this.menuService.remove(id, req.user as any);
   }
 
   @Post(':id/assign')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Assign menu to sites' })
   assign(@Param('id') id: string, @Body() dto: MenuAssignDto, @Req() req: Request) {
     return this.menuService.assignToSites(id, dto, req.user as any);
   }
 
   @Delete(':id/assign/:siteId')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Remove menu from a site' })
   unassign(@Param('id') id: string, @Param('siteId') siteId: string, @Req() req: Request) {
     return this.menuService.unassignFromSite(id, siteId, req.user as any);
@@ -103,7 +103,7 @@ export class MenuController {
   // ══════════════════════════════════════════════════
 
   @Post(':menuId/categories')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
   @ApiOperation({ summary: 'Create a category under a menu' })
   createCategory(
     @Param('menuId') menuId: string,
@@ -114,14 +114,14 @@ export class MenuController {
   }
 
   @Get(':menuId/categories')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD, Role.FOH, Role.KITCHEN_STAFF)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.FOH, Role.KITCHEN_STAFF)
   @ApiOperation({ summary: 'List categories in a menu' })
   listCategories(@Param('menuId') menuId: string, @Req() req: Request) {
     return this.menuService.listCategories(menuId, req.user as any);
   }
 
   @Patch(':menuId/categories/:categoryId')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
   @ApiOperation({ summary: 'Update a category' })
   updateCategory(
     @Param('menuId') menuId: string,
@@ -133,7 +133,7 @@ export class MenuController {
   }
 
   @Delete(':menuId/categories/:categoryId')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Delete a category (cascade items)' })
   deleteCategory(
     @Param('menuId') menuId: string,
@@ -148,7 +148,7 @@ export class MenuController {
   // ══════════════════════════════════════════════════
 
   @Post(':menuId/categories/:categoryId/items')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
   @ApiOperation({ summary: 'Create a menu item with full fields' })
   createItem(
     @Param('menuId') menuId: string,
@@ -160,7 +160,7 @@ export class MenuController {
   }
 
   @Get(':menuId/categories/:categoryId/items')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD, Role.FOH, Role.KITCHEN_STAFF)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.FOH, Role.KITCHEN_STAFF)
   @ApiOperation({ summary: 'List items in a category with modifier groups' })
   listItems(
     @Param('menuId') menuId: string,
@@ -171,7 +171,7 @@ export class MenuController {
   }
 
   @Patch(':menuId/categories/:categoryId/items/:itemId')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
   @ApiOperation({ summary: 'Update item. Set status=EIGHTY_SIX to 86' })
   updateItem(
     @Param('menuId') menuId: string,
@@ -184,7 +184,7 @@ export class MenuController {
   }
 
   @Delete(':menuId/categories/:categoryId/items/:itemId')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Soft-delete item (DISCONTINUED)' })
   deleteItem(
     @Param('menuId') menuId: string,
@@ -200,7 +200,7 @@ export class MenuController {
   // ══════════════════════════════════════════════════
 
   @Post('items/:itemId/modifier-groups')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
   @ApiOperation({ summary: 'Create modifier group for an item' })
   createModifierGroup(
     @Param('itemId') itemId: string,
@@ -211,14 +211,14 @@ export class MenuController {
   }
 
   @Get('items/:itemId/modifier-groups')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD, Role.FOH, Role.KITCHEN_STAFF)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.FOH, Role.KITCHEN_STAFF)
   @ApiOperation({ summary: 'List modifier groups for an item' })
   listModifierGroups(@Param('itemId') itemId: string, @Req() req: Request) {
     return this.menuService.listModifierGroups(itemId, req.user as any);
   }
 
   @Patch('items/:itemId/modifier-groups/:groupId')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
   @ApiOperation({ summary: 'Update modifier group' })
   updateModifierGroup(
     @Param('itemId') itemId: string,
@@ -230,7 +230,7 @@ export class MenuController {
   }
 
   @Delete('items/:itemId/modifier-groups/:groupId')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Delete modifier group with modifiers' })
   deleteModifierGroup(
     @Param('itemId') itemId: string,
@@ -245,7 +245,7 @@ export class MenuController {
   // ══════════════════════════════════════════════════
 
   @Post('modifier-groups/:groupId/modifiers')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
   @ApiOperation({ summary: 'Create modifier in a group' })
   createModifier(
     @Param('groupId') groupId: string,
@@ -256,14 +256,14 @@ export class MenuController {
   }
 
   @Get('modifier-groups/:groupId/modifiers')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
   @ApiOperation({ summary: 'List modifiers in a group' })
   listModifiers(@Param('groupId') groupId: string, @Req() req: Request) {
     return this.menuService.listModifiers(groupId, req.user as any);
   }
 
   @Patch('modifier-groups/:groupId/modifiers/:modifierId')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
   @ApiOperation({ summary: 'Update a modifier' })
   updateModifier(
     @Param('groupId') groupId: string,
@@ -275,7 +275,7 @@ export class MenuController {
   }
 
   @Delete('modifier-groups/:groupId/modifiers/:modifierId')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
   @ApiOperation({ summary: 'Delete a modifier' })
   deleteModifier(
     @Param('groupId') groupId: string,

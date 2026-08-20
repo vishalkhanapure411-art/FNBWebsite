@@ -12,13 +12,19 @@ import { getSites, type SiteWithTenant } from '@/lib/api/sites';
 // under the "Site" section below; /admin/* routes live under "Admin".
 const mainNavigation = [{ label: 'Dashboard', href: '/dashboard', icon: '📊' }];
 
+const TENANT_MANAGEMENT = [
+  Role.FRANCHISE_OWNER,
+  Role.OPERATIONS_MANAGER,
+  Role.FINANCE_MANAGER,
+] as const;
+
 const adminNavigation = [
   { label: 'Tenants', href: '/admin/tenants', icon: '🏛️', roles: [Role.SUPER_ADMIN] },
-  { label: 'Sites', href: '/admin/sites', icon: '🏢', roles: [Role.SUPER_ADMIN, Role.BRAND_MANAGER] },
-  { label: 'Signage', href: '/admin/signage', icon: '📺', roles: [Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER] },
-  { label: 'Quality', href: '/admin/quality/templates', icon: '✅', roles: [Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.QUALITY_AUDITOR] },
-  { label: 'Surveys', href: '/admin/surveys/templates', icon: '📊', roles: [Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.MARKETING_ADMIN] },
-  { label: 'Exec Analytics', href: '/admin/analytics', icon: '📈', roles: [Role.SUPER_ADMIN, Role.BRAND_MANAGER] },
+  { label: 'Sites', href: '/admin/sites', icon: '🏢', roles: [Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_MANAGEMENT] },
+  { label: 'Signage', href: '/admin/signage', icon: '📺', roles: [Role.SUPER_ADMIN, Role.MARKETING_ADMIN, Role.BRAND_MANAGER, ...TENANT_MANAGEMENT] },
+  { label: 'Quality', href: '/admin/quality/templates', icon: '✅', roles: [Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.QUALITY_AUDITOR, ...TENANT_MANAGEMENT] },
+  { label: 'Surveys', href: '/admin/surveys/templates', icon: '📊', roles: [Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.MARKETING_ADMIN, ...TENANT_MANAGEMENT] },
+  { label: 'Exec Analytics', href: '/admin/analytics', icon: '📈', roles: [Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_MANAGEMENT] },
 ];
 
 // Per-site navigation — every href resolves to an existing /sites/[id]/* route.

@@ -7,8 +7,11 @@ import { Role } from '@omniops/shared';
 
 const ADMIN_ROLE_MAP: Record<string, Role[]> = {
   '/admin/tenants': [Role.SUPER_ADMIN],
-  '/admin/sites': [Role.SUPER_ADMIN, Role.BRAND_MANAGER],
-  '/admin/analytics': [Role.SUPER_ADMIN, Role.BRAND_MANAGER],
+  '/admin/sites': [Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.FRANCHISE_OWNER, Role.OPERATIONS_MANAGER, Role.FINANCE_MANAGER],
+  '/admin/signage': [Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.MARKETING_ADMIN, Role.FRANCHISE_OWNER, Role.OPERATIONS_MANAGER, Role.FINANCE_MANAGER],
+  '/admin/quality': [Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.QUALITY_AUDITOR, Role.FRANCHISE_OWNER, Role.OPERATIONS_MANAGER, Role.FINANCE_MANAGER],
+  '/admin/surveys': [Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.MARKETING_ADMIN, Role.FRANCHISE_OWNER, Role.OPERATIONS_MANAGER, Role.FINANCE_MANAGER],
+  '/admin/analytics': [Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.FRANCHISE_OWNER, Role.OPERATIONS_MANAGER, Role.FINANCE_MANAGER],
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { Role } from '@omniops/shared';
 import { Prisma, OrderStatus, PaymentStatus } from '@prisma/client';
@@ -407,6 +407,10 @@ export class RevenueAssuranceService {
     const site = await this.prisma.site.findFirst({ where });
     if (!site) {
       throw new BadRequestException('Site not found');
+    }
+    // Site-scoped users (SITE_LEAD / site QA / site RA) may only view their own site.
+    if (user.siteId && user.role !== Role.SUPER_ADMIN && site.id !== user.siteId) {
+      throw new ForbiddenException('You do not have access to this site');
     }
     return site;
   }
