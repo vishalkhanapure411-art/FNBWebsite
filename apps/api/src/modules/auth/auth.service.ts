@@ -127,6 +127,18 @@ const DEFAULT_PERMISSIONS: Record<Role, Record<string, boolean>> = {
     QUALITY_VIEW: true,
     SITE_READ: true,
   },
+  [Role.MAINTENANCE_ASSURANCE]: {
+    MAINTENANCE_MANAGE: true,
+    MAINTENANCE_VIEW: true,
+    SITE_READ: true,
+    INCIDENT_VIEW: true,
+  },
+  [Role.CONTROLS]: {
+    ORDER_READ: true,
+    SITE_READ: true,
+    INCIDENT_VIEW: true,
+    FINANCE_VIEW: true,
+  },
   [Role.HR_ADMIN]: {
     USER_CREATE: true,
     USER_READ: true,

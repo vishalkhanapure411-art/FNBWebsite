@@ -13,6 +13,8 @@ export enum Role {
   HR_ADMIN = 'HR_ADMIN',
   MARKETING_ADMIN = 'MARKETING_ADMIN',
   CUSTOMER = 'CUSTOMER',
+  MAINTENANCE_ASSURANCE = 'MAINTENANCE_ASSURANCE',
+  CONTROLS = 'CONTROLS',
 }
 
 // Tenant-wide management roles. These mirror BRAND_MANAGER's access on

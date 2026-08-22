@@ -1685,6 +1685,216 @@ async function main() {
   });
   console.log('  ✅ Completed Audit: Lucknow – Daily HACCP (score 86.7 / 6) with 9 responses + 1 OPEN CAPA (prep-area cleanliness)');
 
+  // ═══════════════════════════════════════════
+  // 7.6 Unified Incident Taxonomy (QA / RA / Maintenance / Controls)
+  // ═══════════════════════════════════════════
+  type CategorySeed = { name: string; children: CategorySeed[] };
+  // QA
+  const qaTaxonomy: CategorySeed[] = [
+    {
+      name: 'Food Safety',
+      children: [
+        { name: 'Receiving & Storage', children: ['Cold receiving temps', 'FIFO rotation', 'Dry store checks', 'Stock age monitoring'].map((n) => ({ name: n, children: [] })) },
+        { name: 'Labelling & Allergens', children: ['Allergen labels', 'Date labels', 'Cross-contact risk', 'Menu allergen info'].map((n) => ({ name: n, children: [] })) },
+        { name: 'Hygiene & Sanitation', children: ['Hand hygiene', 'Surface sanitation', 'Pest control', 'Waste handling'].map((n) => ({ name: n, children: [] })) },
+        { name: 'Cooking & Holding Temps', children: ['Core cooking temps', 'Hot holding', 'Cold holding', 'Reheating protocol'].map((n) => ({ name: n, children: [] })) },
+      ],
+    },
+    {
+      name: 'QA Audit',
+      children: [
+        { name: 'Scheduled Audits', children: ['Daily HACCP', 'Weekly walkthrough', 'Monthly deep-clean', 'Surprise audit'].map((n) => ({ name: n, children: [] })) },
+        { name: 'Follow-ups', children: ['CAPA closure', 'Re-audit', 'Evidence upload', 'Escalation review'].map((n) => ({ name: n, children: [] })) },
+        { name: 'Team & Training', children: ['Training records', 'Certification expiry', 'Induction checks', 'Refresher schedule'].map((n) => ({ name: n, children: [] })) },
+      ],
+    },
+    {
+      name: 'Customer Feedback',
+      children: [
+        { name: 'Complaints', children: ['Food quality', 'Service', 'Hygiene', 'Ambience'].map((n) => ({ name: n, children: [] })) },
+        { name: 'Survey Signals', children: ['Low NPS', 'Allergy concerns', 'Repeat complaint', 'Praise follow-up'].map((n) => ({ name: n, children: [] })) },
+      ],
+    },
+  ];
+  // RA
+  const raTaxonomy: CategorySeed[] = [
+    {
+      name: 'Payments',
+      children: [
+        { name: 'Refund Anomalies', children: ['Excess refund', 'Duplicate refund', 'Unapproved refund', 'Refund without receipt'].map((n) => ({ name: n, children: [] })) },
+        { name: 'No-Sale Events', children: ['Excess no-sale', 'No-sale without void', 'Till variance', 'Manager override'].map((n) => ({ name: n, children: [] })) },
+        { name: 'Mismatches', children: ['Settlement mismatch', 'Payment vs order', 'End-of-day variance', 'Mode mismatch'].map((n) => ({ name: n, children: [] })) },
+      ],
+    },
+    {
+      name: 'Revenue Leakage',
+      children: [
+        { name: 'Orders', children: ['Discount outliers', 'Missing payment', 'Zero-total order', 'Manual price override'].map((n) => ({ name: n, children: [] })) },
+        { name: 'Void Spikes', children: ['High void rate', 'Prep-side voids', 'Late voids', 'Bulk item void'].map((n) => ({ name: n, children: [] })) },
+      ],
+    },
+    {
+      name: 'Compliance',
+      children: [
+        { name: 'Taxation', children: ['Missing taxes', 'Wrong GST', 'Rounding errors', 'Tax rate mismatch'].map((n) => ({ name: n, children: [] })) },
+        { name: 'Audit Trail', children: ['Deleted orders', 'Override events', 'User anomalies', 'Timestamp gaps'].map((n) => ({ name: n, children: [] })) },
+      ],
+    },
+    {
+      name: 'Reporting',
+      children: [
+        { name: 'Daily', children: ['Sales report', 'Anomaly summary', 'Deposit check', 'Exception log'].map((n) => ({ name: n, children: [] })) },
+        { name: 'Weekly', children: ['Revenue trends', 'Leakage follow-up', 'Top risk sites', 'Action tracker'].map((n) => ({ name: n, children: [] })) },
+      ],
+    },
+  ];
+  // MAINTENANCE
+  const mntTaxonomy: CategorySeed[] = [
+    {
+      name: 'Equipment',
+      children: [
+        { name: 'Kitchen Assets', children: ['Walk-in cooler', 'Fryer', 'Grill', 'Refrigeration'].map((n) => ({ name: n, children: [] })) },
+        { name: 'Bakery & Beverage', children: ['Oven', 'Coffee machine', 'Blender', 'Dishwasher'].map((n) => ({ name: n, children: [] })) },
+        { name: 'HVAC', children: ['AC units', 'Exhaust hood', 'Ventilation', 'Thermostat'].map((n) => ({ name: n, children: [] })) },
+      ],
+    },
+    {
+      name: 'Electrical / Plumbing',
+      children: [
+        { name: 'Electrical', children: ['Power trip', 'Lighting', 'Wiring', 'Sockets'].map((n) => ({ name: n, children: [] })) },
+        { name: 'Plumbing', children: ['Leak', 'Drainage', 'Water supply', 'Water heater'].map((n) => ({ name: n, children: [] })) },
+      ],
+    },
+    {
+      name: 'Safety & Compliance',
+      children: [
+        { name: 'Fire Safety', children: ['Extinguishers', 'Fire alarms', 'Emergency exits', 'Gas isolator'].map((n) => ({ name: n, children: [] })) },
+        { name: 'Health & Safety', children: ['Slip hazard', 'Guarding', 'Signage', 'PPE availability'].map((n) => ({ name: n, children: [] })) },
+      ],
+    },
+    {
+      name: 'IT',
+      children: [
+        { name: 'POS', children: ['Till down', 'Printer', 'Barcode scanner', 'Card terminal'].map((n) => ({ name: n, children: [] })) },
+        { name: 'KDS / Signage', children: ['KDS down', 'Display', 'Network', 'Screen health'].map((n) => ({ name: n, children: [] })) },
+        { name: 'Back Office', children: ['Server', 'Router', 'CCTV', 'UPS'].map((n) => ({ name: n, children: [] })) },
+      ],
+    },
+  ];
+  // CONTROLS
+  const ctlTaxonomy: CategorySeed[] = [
+    {
+      name: 'Menu & Pricing',
+      children: [
+        { name: 'Pricing Errors', children: ['Wrong price', 'Missing modifier charge', 'Incorrect discount', 'Price list mismatch'].map((n) => ({ name: n, children: [] })) },
+        { name: 'Recipes', children: ['Recipe mismatch', 'Yield variance', 'Standardisation', 'Costing error'].map((n) => ({ name: n, children: [] })) },
+      ],
+    },
+    {
+      name: 'Inventory / COGS',
+      children: [
+        { name: 'Variance', children: ['Stock variance', 'Wastage', 'Shrinkage', 'Damaged stock'].map((n) => ({ name: n, children: [] })) },
+        { name: 'Counting', children: ['Variance in count', 'Ghost stock', 'Cycle count issues', 'Counting error'].map((n) => ({ name: n, children: [] })) },
+      ],
+    },
+    {
+      name: 'Finance',
+      children: [
+        { name: 'Month-End', children: ['Reconciliation issues', 'Accruals', 'Cut-off breaches', 'GL mismatch'].map((n) => ({ name: n, children: [] })) },
+        { name: 'Taxation', children: ['GST mismatch', 'TDS', 'Invoice errors', 'Input credit'].map((n) => ({ name: n, children: [] })) },
+      ],
+    },
+    {
+      name: 'Supplier',
+      children: [
+        { name: 'Invoicing', children: ['Invoice mismatch', 'Duplicate invoice', 'Overbilling', 'Late invoice'].map((n) => ({ name: n, children: [] })) },
+        { name: 'Quality', children: ['Delivery quality', 'Short delivery', 'Pricing disputes', 'Contract terms'].map((n) => ({ name: n, children: [] })) },
+      ],
+    },
+  ];
+
+  const seedCategoryTree = async (department: string, nodes: CategorySeed[]) => {
+    const createNode = async (node: CategorySeed, level: number, parentId: string | null): Promise<void> => {
+      const cat = await prisma.incidentCategory.create({
+        data: {
+          department: department as never,
+          level,
+          name: node.name,
+          parentId,
+          tenantId: vmTenant.id,
+          siteId: null,
+        },
+      });
+      for (const child of node.children) {
+        await createNode(child, level + 1, cat.id);
+      }
+    };
+    for (const n of nodes) {
+      await createNode(n, 1, null);
+    }
+  };
+
+  const taxonomies: { dept: string; tree: CategorySeed[] }[] = [
+    { dept: 'QA', tree: qaTaxonomy },
+    { dept: 'RA', tree: raTaxonomy },
+    { dept: 'MAINTENANCE', tree: mntTaxonomy },
+    { dept: 'CONTROLS', tree: ctlTaxonomy },
+  ];
+  for (const { dept, tree } of taxonomies) {
+    await seedCategoryTree(dept, tree);
+    console.log(`  ✅ Incident taxonomy: ${dept} (3-level)`);
+  }
+
+  // ═══════════════════════════════════════════
+  // 7.7 MAINTENANCE_ASSURANCE + CONTROLS users
+  // ═══════════════════════════════════════════
+  const vmAssuranceCentral = [
+    { id: 'u-vm-maintenance', email: 'vishal.maintenance@vishalmc.in', firstName: 'Maintenance', lastName: 'Central MNT', role: 'MAINTENANCE_ASSURANCE' },
+    { id: 'u-vm-controls', email: 'vishal.controls@vishalmc.in', firstName: 'Controls', lastName: 'Central CTL', role: 'CONTROLS' },
+  ] as const;
+  for (const u of vmAssuranceCentral) {
+    await prisma.user.create({
+      data: {
+        id: u.id,
+        tenantId: vmTenant.id,
+        email: u.email,
+        passwordHash: staffPasswordHash,
+        firstName: u.firstName,
+        lastName: u.lastName,
+        role: u.role as never,
+        status: 'ACTIVE',
+        lastLoginAt: new Date(),
+      },
+    });
+    console.log(`  ✅ User: ${u.firstName} ${u.lastName} (${u.role}, central) — ${u.email}`);
+  }
+
+  const vmAssuranceSiteRoles = [
+    { suffix: 'maintenance', role: 'MAINTENANCE_ASSURANCE', lastName: 'Maintenance' },
+    { suffix: 'controls', role: 'CONTROLS', lastName: 'Controls' },
+  ] as const;
+  let vmAssuranceSiteCount = 0;
+  for (const c of vmCities) {
+    for (const r of vmAssuranceSiteRoles) {
+      await prisma.user.create({
+        data: {
+          id: `u-vm-${c.slug}-${r.suffix}`,
+          tenantId: vmTenant.id,
+          siteId: vmSites.get(c.slug)!.id,
+          email: `${c.slug}.${r.suffix}@vishalmc.in`,
+          passwordHash: staffPasswordHash,
+          firstName: c.city,
+          lastName: r.lastName,
+          role: r.role as never,
+          status: 'ACTIVE',
+          lastLoginAt: new Date(),
+        },
+      });
+      vmAssuranceSiteCount += 1;
+    }
+  }
+  console.log(`  ✅ Users: 2 central MAINTENANCE_ASSURANCE/CONTROLS + ${vmAssuranceSiteCount} site-level (${vmCities.length} branches × 2)`);
+
   console.log('\n🎉 Seed complete!');
 }
 

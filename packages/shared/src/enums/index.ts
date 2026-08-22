@@ -23,3 +23,8 @@ export {
   FieldReportSeverity,
   FieldReportStatus,
 } from './fieldReport';
+export {
+  IncidentDepartment,
+  IncidentSeverity,
+  IncidentStatus,
+} from './incident';

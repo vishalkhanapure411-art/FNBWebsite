@@ -48,6 +48,8 @@ model Tenant {
   surveyTemplates   SurveyTemplate[]
   surveys           Survey[]
   fieldReports      FieldReport[]
+  incidentTickets   IncidentTicket[]
+  incidentCategories IncidentCategory[]
 
   @@map("tenants")
 }
@@ -89,6 +91,8 @@ model Site {
   audits            Audit[]
   surveys           Survey[]
   fieldReports      FieldReport[]
+  incidentTickets   IncidentTicket[]
+  incidentCategories IncidentCategory[]
 
   @@unique([tenantId, slug])
   @@index([tenantId])
@@ -133,6 +137,9 @@ model User {
   assignedCapas    CAPA[]         @relation("CAPAsAssigned")
   reportedFieldReports FieldReport[] @relation("ReportedFieldReports")
   fieldReportComments  FieldReportComment[]
+  incidentTicketsCreated IncidentTicket[] @relation("IncidentCreatedBy")
+  incidentTicketsAssigned IncidentTicket[] @relation("IncidentAssignedTo")
+  incidentComments       IncidentTicketComment[]
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -1029,6 +1036,8 @@ enum Role {
   HR_ADMIN
   MARKETING_ADMIN
   CUSTOMER
+  MAINTENANCE_ASSURANCE
+  CONTROLS
 }
 
 enum UserStatus {
@@ -1268,4 +1277,102 @@ enum FieldReportStatus {
   REVIEWED
   ACTIONED
   DISMISSED
+}
+
+// ══════════════════════════════════════════════════
+// UNIFIED INCIDENT TICKETING (QA / RA / Maintenance / Controls)
+// One engine shared by all assurance departments; RLS enforced in the API layer.
+// ══════════════════════════════════════════════════
+enum IncidentDepartment {
+  QA
+  RA
+  MAINTENANCE
+  CONTROLS
+}
+enum IncidentSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+enum IncidentStatus {
+  OPEN
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model IncidentCategory {
+  id         String              @id @default(uuid())
+  department IncidentDepartment
+  level      Int
+  name       String
+  parentId   String?
+  tenantId   String
+  siteId     String?
+  createdAt  DateTime            @default(now())
+
+  parent   IncidentCategory?  @relation("IncidentCategoryChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children IncidentCategory[] @relation("IncidentCategoryChildren")
+  tenant   Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  site     Site?              @relation(fields: [siteId], references: [id], onDelete: SetNull)
+
+  ticketLevel1 IncidentTicket[] @relation("TicketCategoryL1")
+  ticketLevel2 IncidentTicket[] @relation("TicketCategoryL2")
+  ticketLevel3 IncidentTicket[] @relation("TicketCategoryL3")
+
+  @@unique([department, level, parentId, name, tenantId])
+  @@index([tenantId, department])
+  @@map("incident_categories")
+}
+
+model IncidentTicket {
+  id            String              @id @default(uuid())
+  ticketNumber  String
+  tenantId      String
+  siteId        String?
+  department    IncidentDepartment
+  categoryLevel1Id String?
+  categoryLevel2Id String?
+  categoryLevel3Id String?
+  title         String
+  description   String
+  severity      IncidentSeverity    @default(MEDIUM)
+  status        IncidentStatus      @default(OPEN)
+  assignedToId  String?
+  createdById   String
+  dueAt         DateTime?
+  resolvedAt    DateTime?
+  closedAt      DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  tenant        Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  site          Site?               @relation(fields: [siteId], references: [id], onDelete: SetNull)
+  categoryLevel1 IncidentCategory?  @relation("TicketCategoryL1", fields: [categoryLevel1Id], references: [id], onDelete: SetNull)
+  categoryLevel2 IncidentCategory?  @relation("TicketCategoryL2", fields: [categoryLevel2Id], references: [id], onDelete: SetNull)
+  categoryLevel3 IncidentCategory?  @relation("TicketCategoryL3", fields: [categoryLevel3Id], references: [id], onDelete: SetNull)
+  createdBy     User                @relation("IncidentCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  assignedTo    User?               @relation("IncidentAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+  comments      IncidentTicketComment[]
+
+  @@unique([tenantId, ticketNumber])
+  @@index([tenantId, department, status])
+  @@index([siteId, department])
+  @@map("incident_tickets")
+}
+
+model IncidentTicketComment {
+  id        String   @id @default(uuid())
+  ticketId  String
+  authorId  String
+  text      String
+  createdAt DateTime @default(now())
+
+  ticket IncidentTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@map("incident_ticket_comments")
 }
