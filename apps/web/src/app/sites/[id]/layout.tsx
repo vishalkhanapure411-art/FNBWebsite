@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/providers/auth-provider';
 import Link from 'next/link';
+import { INCIDENT_ROLES } from '@/lib/incidents';
 
 export default function SiteLayout({
   children,
@@ -52,7 +53,13 @@ export default function SiteLayout({
     { label: 'Quality', href: `/sites/${siteId}/quality/audits`, icon: '✅' },
     { label: 'Surveys', href: `/sites/${siteId}/surveys`, icon: '📊' },
     { label: 'Field Reports', href: `/sites/${siteId}/field-reports`, icon: '📋' },
+    ...(INCIDENT_ROLES.includes(user.role as never)
+      ? [{ label: 'Incidents', href: `/sites/${siteId}/incidents`, icon: '🎫' }]
+      : []),
   ];
+  const activeIncidentTab = INCIDENT_ROLES.includes(user.role as never)
+    ? pathname.startsWith(`/sites/${siteId}/incidents`)
+    : false;
 
   return (
     <div>
@@ -70,6 +77,8 @@ export default function SiteLayout({
                   ? pathname.startsWith(`/sites/${siteId}/revenue-assurance`)
                   : tab.href === `/sites/${siteId}/analytics`
                   ? pathname.startsWith(`/sites/${siteId}/analytics`)
+                  : tab.href === `/sites/${siteId}/incidents`
+                  ? activeIncidentTab
                   : pathname === tab.href;
           return (
             <Link

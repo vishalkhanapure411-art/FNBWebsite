@@ -7,6 +7,7 @@ import { useTheme } from '@/providers/theme-provider';
 import { useAuth } from '@/providers/auth-provider';
 import { Role } from '@omniops/shared';
 import { getSites, type SiteWithTenant } from '@/lib/api/sites';
+import { INCIDENT_ROLES } from '@/lib/incidents';
 
 // Top-level navigation — only routes that actually exist. Per-site pages live
 // under the "Site" section below; /admin/* routes live under "Admin".
@@ -25,6 +26,9 @@ const adminNavigation = [
   { label: 'Quality', href: '/admin/quality/templates', icon: '✅', roles: [Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.QUALITY_AUDITOR, ...TENANT_MANAGEMENT] },
   { label: 'Surveys', href: '/admin/surveys/templates', icon: '📊', roles: [Role.SUPER_ADMIN, Role.BRAND_MANAGER, Role.MARKETING_ADMIN, ...TENANT_MANAGEMENT] },
   { label: 'Exec Analytics', href: '/admin/analytics', icon: '📈', roles: [Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_MANAGEMENT] },
+  // centralOnly: only surfaces for users WITHOUT their own siteId (central dept +
+  // tenant-level management). Site-scoped incident users use the per-site nav.
+  { label: 'Incidents', href: '/admin/incidents', icon: '🎫', roles: [...INCIDENT_ROLES], centralOnly: true },
 ];
 
 // Per-site navigation — every href resolves to an existing /sites/[id]/* route.
@@ -47,6 +51,7 @@ const siteNavigation = [
   { label: 'Maintenance', href: (id: string) => `/sites/${id}/maintenance/tickets`, icon: '🔧' },
   { label: 'Audits', href: (id: string) => `/sites/${id}/quality/audits`, icon: '✅' },
   { label: 'CAPAs', href: (id: string) => `/sites/${id}/quality/capas`, icon: '🛠️' },
+  { label: 'Incidents', href: (id: string) => `/sites/${id}/incidents`, icon: '🎫', roles: [...INCIDENT_ROLES] },
 ];
 
 export function Sidebar() {
@@ -147,6 +152,8 @@ export function Sidebar() {
                 </div>
               )}
               {siteNavigation.map((item) => {
+                const siteRoles = (item as { roles?: Role[] }).roles;
+                if (siteRoles && !siteRoles.includes(user?.role as Role)) return null;
                 const href = item.href(activeSiteId);
                 const isActive = pathname === href || pathname.startsWith(`${href}/`);
                 return (
@@ -164,7 +171,7 @@ export function Sidebar() {
           )}
 
           {/* Admin Section */}
-          {adminNavigation.some((item) => item.roles.includes(user?.role as Role)) && (
+          {adminNavigation.some((item) => item.roles.includes(user?.role as Role) && (!(item as { centralOnly?: boolean }).centralOnly || !user?.siteId)) && (
             <>
               <div className="pt-4 pb-1">
                 <p className="px-3 text-xs font-semibold uppercase tracking-wider text-surface-400 dark:text-surface-500">
@@ -172,7 +179,7 @@ export function Sidebar() {
                 </p>
               </div>
               {adminNavigation
-                .filter((item) => item.roles.includes(user?.role as Role))
+                .filter((item) => item.roles.includes(user?.role as Role) && (!(item as { centralOnly?: boolean }).centralOnly || !user?.siteId))
                 .map((item) => {
                   const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
                   return (
