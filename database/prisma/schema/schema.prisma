@@ -50,6 +50,9 @@ model Tenant {
   fieldReports      FieldReport[]
   incidentTickets   IncidentTicket[]
   incidentCategories IncidentCategory[]
+  closingPeriods     ClosingPeriod[]
+  ingredients        Ingredient[]
+  recipes            Recipe[]
 
   @@map("tenants")
 }
@@ -94,6 +97,7 @@ model Site {
   incidentTickets   IncidentTicket[]
   incidentCategories IncidentCategory[]
 
+  closingPeriods    ClosingPeriod[]
   @@unique([tenantId, slug])
   @@index([tenantId])
   @@map("sites")
@@ -140,6 +144,7 @@ model User {
   incidentTicketsCreated IncidentTicket[] @relation("IncidentCreatedBy")
   incidentTicketsAssigned IncidentTicket[] @relation("IncidentAssignedTo")
   incidentComments       IncidentTicketComment[]
+  closingPeriodsClosed   ClosingPeriod[] @relation("ClosingPeriodClosedBy")
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -266,6 +271,7 @@ model MenuItem {
   menu            Menu                    @relation(fields: [menuId], references: [id], onDelete: Cascade)
   modifierGroups  MenuItemModifierGroup[]
   orderItems      OrderItem[]
+  recipes         Recipe[]
 
   @@index([categoryId])
   @@index([menuId])
@@ -1375,4 +1381,105 @@ model IncidentTicketComment {
 
   @@index([ticketId])
   @@map("incident_ticket_comments")
+}
+
+// ══════════════════════════════════════════════════
+// CONTROLS / PRODUCT MANAGEMENT (Ingredient library,
+// Recipe BOM, COGS roll-up, Month Closing)
+// ══════════════════════════════════════════════════
+
+enum IngredientUnit {
+  KG
+  G
+  L
+  ML
+  PCS
+  PACK
+}
+
+enum ClosingPeriodStatus {
+  OPEN
+  LOCKED
+}
+
+model Ingredient {
+  id          String         @id @default(uuid())
+  tenantId    String
+  name        String
+  unit        IngredientUnit
+  costPerUnit Decimal        @db.Decimal(10, 2)
+  supplier    String?
+  active      Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  recipeLines RecipeIngredient[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId, active])
+  @@map("ingredients")
+}
+
+model Recipe {
+  id           String   @id @default(uuid())
+  tenantId     String
+  menuItemId   String
+  name         String
+  yieldQty     Decimal  @default(1) @db.Decimal(10, 3)
+  version      Int      @default(1)
+  costPerServe Decimal  @db.Decimal(10, 2)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant   Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  menuItem MenuItem           @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  lines    RecipeIngredient[]
+
+  @@unique([tenantId, menuItemId, version])
+  @@index([tenantId, menuItemId])
+  @@map("recipes")
+}
+
+model RecipeIngredient {
+  id           String        @id @default(uuid())
+  recipeId     String
+  ingredientId String
+  qty          Decimal       @db.Decimal(10, 3)
+  unit         IngredientUnit
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+
+  @@index([recipeId])
+  @@index([ingredientId])
+  @@map("recipe_ingredients")
+}
+
+model ClosingPeriod {
+  id          String              @id @default(uuid())
+  tenantId    String
+  siteId      String?
+  label       String
+  startDate   DateTime
+  endDate     DateTime
+  status      ClosingPeriodStatus @default(OPEN)
+  revenue     Decimal             @default(0) @db.Decimal(12, 2)
+  cogs        Decimal             @default(0) @db.Decimal(12, 2)
+  grossMargin Decimal             @default(0) @db.Decimal(12, 2)
+  closedAt    DateTime?
+  closedById  String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  site     Site?  @relation(fields: [siteId], references: [id], onDelete: SetNull)
+  closedBy User?  @relation("ClosingPeriodClosedBy", fields: [closedById], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, siteId, label])
+  @@index([tenantId, status])
+  @@map("closing_periods")
 }
