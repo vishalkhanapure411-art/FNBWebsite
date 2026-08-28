@@ -1895,6 +1895,184 @@ async function main() {
   }
   console.log(`  ✅ Users: 2 central MAINTENANCE_ASSURANCE/CONTROLS + ${vmAssuranceSiteCount} site-level (${vmCities.length} branches × 2)`);
 
+  // ═══════════════════════════════════════════
+  // 8. CONTROLS / PRODUCT MANAGEMENT seed
+  // ingredients -> recipes (BOM + computed cost) -> closing periods
+  // ═══════════════════════════════════════════
+  const vmIngredientSeed: { key: string; name: string; unit: string; costPerUnit: number; supplier?: string }[] = [
+    { key: 'rice', name: 'Basmati Rice', unit: 'KG', costPerUnit: 120, supplier: 'Annapurna Grains' },
+    { key: 'urad-dal', name: 'Urad Dal', unit: 'KG', costPerUnit: 140 },
+    { key: 'rice-flour', name: 'Rice Flour', unit: 'KG', costPerUnit: 60 },
+    { key: 'rava', name: 'Rava / Semolina', unit: 'KG', costPerUnit: 55 },
+    { key: 'toor-dal', name: 'Toor Dal', unit: 'KG', costPerUnit: 130 },
+    { key: 'besan', name: 'Besan (Chickpea Flour)', unit: 'KG', costPerUnit: 80 },
+    { key: 'flour', name: 'All-Purpose Flour (Maida)', unit: 'KG', costPerUnit: 50, supplier: 'Annapurna Grains' },
+    { key: 'paneer', name: 'Paneer', unit: 'KG', costPerUnit: 320, supplier: 'Verka Dairy' },
+    { key: 'chicken', name: 'Boneless Chicken', unit: 'KG', costPerUnit: 280, supplier: 'FreshFarm Poultry' },
+    { key: 'butter', name: 'Butter', unit: 'KG', costPerUnit: 480 },
+    { key: 'milk', name: 'Milk', unit: 'L', costPerUnit: 60 },
+    { key: 'curd', name: 'Curd / Yogurt', unit: 'KG', costPerUnit: 90 },
+    { key: 'tomato', name: 'Tomato', unit: 'KG', costPerUnit: 40 },
+    { key: 'onion', name: 'Onion', unit: 'KG', costPerUnit: 35 },
+    { key: 'potato', name: 'Potato', unit: 'KG', costPerUnit: 30 },
+    { key: 'spinach', name: 'Spinach', unit: 'KG', costPerUnit: 60 },
+    { key: 'mango', name: 'Mango Pulp', unit: 'KG', costPerUnit: 150 },
+    { key: 'milk-powder', name: 'Milk Powder', unit: 'KG', costPerUnit: 300, supplier: 'Verka Dairy' },
+    { key: 'ginger-garlic', name: 'Ginger-Garlic Paste', unit: 'KG', costPerUnit: 120 },
+    { key: 'turmeric', name: 'Turmeric Powder', unit: 'KG', costPerUnit: 300 },
+    { key: 'chilli', name: 'Red Chilli Powder', unit: 'KG', costPerUnit: 350 },
+    { key: 'garam-masala', name: 'Garam Masala', unit: 'KG', costPerUnit: 500 },
+    { key: 'coriander', name: 'Fresh Coriander', unit: 'PCS', costPerUnit: 20 },
+    { key: 'oil', name: 'Cooking Oil', unit: 'L', costPerUnit: 140 },
+    { key: 'salt', name: 'Salt', unit: 'KG', costPerUnit: 40 },
+    { key: 'sugar', name: 'Sugar', unit: 'KG', costPerUnit: 45 },
+    { key: 'tea', name: 'Tea Leaves', unit: 'KG', costPerUnit: 400 },
+  ];
+  const vmIngredientMap = new Map<string, string>();
+  const vmIngredientCost = new Map<string, number>();
+  for (const ing of vmIngredientSeed) {
+    const id = `ing-vm-${ing.key}`;
+    await prisma.ingredient.create({
+      data: {
+        id,
+        tenantId: vmTenant.id,
+        name: ing.name,
+        unit: ing.unit as never,
+        costPerUnit: ing.costPerUnit,
+        supplier: ing.supplier ?? null,
+        active: true,
+      },
+    });
+    vmIngredientMap.set(ing.key, id);
+    vmIngredientCost.set(ing.key, ing.costPerUnit);
+  }
+  console.log(`  ✅ Ingredients: ${vmIngredientSeed.length} (Vishal Multicuisine)`);
+
+  type RecipeSeedLine = { key: string; qty: number; unit: string };
+  const recipeCost = (lines: RecipeSeedLine[], yieldQty = 1) => {
+    const total = lines.reduce((s, l) => s + l.qty * vmIngredientCost.get(l.key)!, 0);
+    return Number((total / yieldQty).toFixed(2));
+  };
+  const vmRecipeSeeds: { menuItemId: string; name: string; yieldQty: number; lines: RecipeSeedLine[] }[] = [
+    { menuItemId: 'mi-vm-masala-dosa', name: 'Masala Dosa', yieldQty: 1, lines: [
+      { key: 'rice-flour', qty: 0.15, unit: 'KG' }, { key: 'urad-dal', qty: 0.05, unit: 'KG' },
+      { key: 'potato', qty: 0.15, unit: 'KG' }, { key: 'onion', qty: 0.05, unit: 'KG' },
+      { key: 'oil', qty: 0.02, unit: 'L' }, { key: 'salt', qty: 0.005, unit: 'KG' },
+    ] },
+    { menuItemId: 'mi-vm-idli-sambar', name: 'Idli Sambar', yieldQty: 4, lines: [
+      { key: 'rice', qty: 0.3, unit: 'KG' }, { key: 'urad-dal', qty: 0.1, unit: 'KG' },
+      { key: 'toor-dal', qty: 0.12, unit: 'KG' }, { key: 'tomato', qty: 0.2, unit: 'KG' },
+      { key: 'onion', qty: 0.1, unit: 'KG' }, { key: 'oil', qty: 0.04, unit: 'L' },
+    ] },
+    { menuItemId: 'mi-vm-butter-chicken', name: 'Butter Chicken', yieldQty: 1, lines: [
+      { key: 'chicken', qty: 0.25, unit: 'KG' }, { key: 'butter', qty: 0.05, unit: 'KG' },
+      { key: 'tomato', qty: 0.15, unit: 'KG' }, { key: 'milk', qty: 0.1, unit: 'L' },
+      { key: 'garam-masala', qty: 0.005, unit: 'KG' }, { key: 'ginger-garlic', qty: 0.01, unit: 'KG' },
+    ] },
+    { menuItemId: 'mi-vm-paneer-tikka', name: 'Paneer Tikka', yieldQty: 1, lines: [
+      { key: 'paneer', qty: 0.25, unit: 'KG' }, { key: 'curd', qty: 0.05, unit: 'KG' },
+      { key: 'ginger-garlic', qty: 0.01, unit: 'KG' }, { key: 'chilli', qty: 0.005, unit: 'KG' },
+      { key: 'garam-masala', qty: 0.004, unit: 'KG' }, { key: 'oil', qty: 0.02, unit: 'L' },
+    ] },
+    { menuItemId: 'mi-vm-dal-makhani', name: 'Dal Makhani', yieldQty: 1, lines: [
+      { key: 'toor-dal', qty: 0.15, unit: 'KG' }, { key: 'butter', qty: 0.03, unit: 'KG' },
+      { key: 'milk', qty: 0.1, unit: 'L' }, { key: 'tomato', qty: 0.1, unit: 'KG' },
+      { key: 'garam-masala', qty: 0.004, unit: 'KG' },
+    ] },
+    { menuItemId: 'mi-vm-biryani', name: 'Veg Biryani', yieldQty: 2, lines: [
+      { key: 'rice', qty: 0.4, unit: 'KG' }, { key: 'curd', qty: 0.1, unit: 'KG' },
+      { key: 'onion', qty: 0.15, unit: 'KG' }, { key: 'tomato', qty: 0.1, unit: 'KG' },
+      { key: 'garam-masala', qty: 0.006, unit: 'KG' }, { key: 'oil', qty: 0.04, unit: 'L' },
+    ] },
+    { menuItemId: 'mi-vm-chole-bhature', name: 'Chole Bhature', yieldQty: 2, lines: [
+      { key: 'besan', qty: 0.3, unit: 'KG' }, { key: 'flour', qty: 0.2, unit: 'KG' },
+      { key: 'tomato', qty: 0.15, unit: 'KG' }, { key: 'onion', qty: 0.1, unit: 'KG' },
+      { key: 'oil', qty: 0.1, unit: 'L' },
+    ] },
+    { menuItemId: 'mi-vm-palak-paneer', name: 'Palak Paneer', yieldQty: 1, lines: [
+      { key: 'paneer', qty: 0.2, unit: 'KG' }, { key: 'spinach', qty: 0.2, unit: 'KG' },
+      { key: 'butter', qty: 0.03, unit: 'KG' }, { key: 'onion', qty: 0.05, unit: 'KG' },
+      { key: 'garam-masala', qty: 0.004, unit: 'KG' },
+    ] },
+    { menuItemId: 'mi-vm-naan', name: 'Naan', yieldQty: 6, lines: [
+      { key: 'flour', qty: 0.5, unit: 'KG' }, { key: 'curd', qty: 0.1, unit: 'KG' },
+      { key: 'butter', qty: 0.03, unit: 'KG' }, { key: 'salt', qty: 0.01, unit: 'KG' },
+    ] },
+    { menuItemId: 'mi-vm-mango-lassi', name: 'Mango Lassi', yieldQty: 1, lines: [
+      { key: 'curd', qty: 0.25, unit: 'KG' }, { key: 'mango', qty: 0.15, unit: 'KG' },
+      { key: 'sugar', qty: 0.05, unit: 'KG' }, { key: 'milk', qty: 0.05, unit: 'L' },
+    ] },
+    { menuItemId: 'mi-vm-gulab-jamun', name: 'Gulab Jamun', yieldQty: 8, lines: [
+      { key: 'milk-powder', qty: 0.25, unit: 'KG' }, { key: 'sugar', qty: 0.2, unit: 'KG' },
+      { key: 'oil', qty: 0.1, unit: 'L' },
+    ] },
+    { menuItemId: 'mi-vm-masala-chai', name: 'Masala Chai', yieldQty: 4, lines: [
+      { key: 'milk', qty: 0.8, unit: 'L' }, { key: 'tea', qty: 0.02, unit: 'KG' },
+      { key: 'sugar', qty: 0.08, unit: 'KG' }, { key: 'garam-masala', qty: 0.004, unit: 'KG' },
+    ] },
+  ];
+  for (const [i, r] of vmRecipeSeeds.entries()) {
+    const costPerServe = recipeCost(r.lines, r.yieldQty);
+    await prisma.recipe.create({
+      data: {
+        id: `rc-vm-${i + 1}`,
+        tenantId: vmTenant.id,
+        menuItemId: r.menuItemId,
+        name: r.name,
+        yieldQty: r.yieldQty,
+        version: 1,
+        costPerServe,
+        active: true,
+        lines: {
+          create: r.lines.map((l) => ({
+            ingredientId: vmIngredientMap.get(l.key)!,
+            qty: l.qty,
+            unit: l.unit as never,
+          })),
+        },
+      },
+    });
+  }
+  console.log(`  ✅ Recipes (BOM): ${vmRecipeSeeds.length} with computed costPerServe`);
+
+  // Closing periods: 1 LOCKED (previous month, Mumbai) + 1 OPEN (current, Mumbai)
+  const mumbaiSiteId = vmSites.get('mumbai')!.id;
+  const nowD = new Date();
+  const prevMonth = new Date(nowD.getFullYear(), nowD.getMonth() - 1, 1);
+  const thisMonthStart = new Date(nowD.getFullYear(), nowD.getMonth(), 1);
+  await prisma.closingPeriod.create({
+    data: {
+      id: 'cp-vm-mumbai-prev',
+      tenantId: vmTenant.id,
+      siteId: mumbaiSiteId,
+      label: `Mumbai ${prevMonth.toLocaleString('en-US', { month: 'long' })} Closing`,
+      startDate: prevMonth,
+      endDate: thisMonthStart,
+      status: 'LOCKED',
+      revenue: 1258000,
+      cogs: 742000,
+      grossMargin: 516000,
+      closedAt: new Date(thisMonthStart.getTime() - 86400000),
+      closedById: 'u-vm-controls',
+    },
+  });
+  await prisma.closingPeriod.create({
+    data: {
+      id: 'cp-vm-mumbai-current',
+      tenantId: vmTenant.id,
+      siteId: mumbaiSiteId,
+      label: `Mumbai ${nowD.toLocaleString('en-US', { month: 'long' })} Closing (Open)`,
+      startDate: thisMonthStart,
+      endDate: new Date(nowD.getFullYear(), nowD.getMonth() + 1, 1),
+      status: 'OPEN',
+      revenue: 0,
+      cogs: 0,
+      grossMargin: 0,
+    },
+  });
+  console.log('  ✅ Closing Periods: 1 LOCKED (previous month) + 1 OPEN (current) - Mumbai');
+
+
   console.log('\n🎉 Seed complete!');
 }
 
