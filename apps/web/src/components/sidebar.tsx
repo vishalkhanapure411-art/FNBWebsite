@@ -29,6 +29,7 @@ const adminNavigation = [
   // centralOnly: only surfaces for users WITHOUT their own siteId (central dept +
   // tenant-level management). Site-scoped incident users use the per-site nav.
   { label: 'Incidents', href: '/admin/incidents', icon: '🎫', roles: [...INCIDENT_ROLES], centralOnly: true },
+  { label: 'Controls', href: '/admin/controls', icon: '🧾', roles: [Role.SUPER_ADMIN, Role.CONTROLS, Role.BRAND_MANAGER, ...TENANT_MANAGEMENT], centralOnly: true },
 ];
 
 // Per-site navigation — every href resolves to an existing /sites/[id]/* route.
@@ -52,6 +53,7 @@ const siteNavigation = [
   { label: 'Audits', href: (id: string) => `/sites/${id}/quality/audits`, icon: '✅' },
   { label: 'CAPAs', href: (id: string) => `/sites/${id}/quality/capas`, icon: '🛠️' },
   { label: 'Incidents', href: (id: string) => `/sites/${id}/incidents`, icon: '🎫', roles: [...INCIDENT_ROLES] },
+  { label: 'Controls', href: (id: string) => `/sites/${id}/controls`, icon: '🧾', roles: [Role.SUPER_ADMIN, Role.CONTROLS, Role.BRAND_MANAGER, ...TENANT_MANAGEMENT, Role.SITE_LEAD] },
 ];
 
 export function Sidebar() {

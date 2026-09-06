@@ -5,7 +5,7 @@ import {
   listIngredients, createIngredient, updateIngredient, deleteIngredient,
   listRecipes, createRecipe, getRecipeVersions,
   getCogs, listClosings, createClosingPeriod, closeClosingPeriod,
-  type Ingredient, type Recipe, type CogsData, type ClosingPeriod,
+  type Ingredient, type Recipe, type CogsData, type CogsRow, type ClosingPeriod,
 } from '@/lib/api/controls';
 import { useAuth } from '@/providers/auth-provider';
 
@@ -232,13 +232,13 @@ function RecipesTab({ recipes, canWrite, onChanged, setMsg }: any) {
               {lines.map((l, idx) => (
                 <div key={idx} className="flex gap-2">
                   <select value={l.ingredientId} onChange={(e) => {
-                    const n = [...lines]; n[idx].ingredientId = e.target.value; setLines(n);
+                    const n = [...lines]; n[idx]!.ingredientId = e.target.value; setLines(n);
                   }} className="input-base flex-1">
                     <option value="">Ingredient…</option>
                     {ingredients.map((i) => <option key={i.id} value={i.id}>{i.name} (₹{i.costPerUnit}/{i.unit})</option>)}
                   </select>
                   <input value={l.qty} onChange={(e) => {
-                    const n = [...lines]; n[idx].qty = e.target.value; setLines(n);
+                    const n = [...lines]; n[idx]!.qty = e.target.value; setLines(n);
                   }} placeholder="Qty" type="number" className="input-base w-24" />
                   <button onClick={() => setLines(lines.filter((_, i) => i !== idx))} className="btn-ghost">✕</button>
                 </div>
@@ -324,7 +324,7 @@ function CogsTab({ from, to, setFrom, setTo, cogs, runCogs }: any) {
                   </tr>
                 </thead>
                 <tbody>
-                  {cogs.perItem.map((r) => {
+                  {cogs.perItem.map((r: CogsRow) => {
                     const m = r.revenue - r.cost;
                     const pct = r.revenue > 0 ? ((m / r.revenue) * 100).toFixed(1) : '—';
                     return (
