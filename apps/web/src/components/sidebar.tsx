@@ -30,6 +30,7 @@ const adminNavigation = [
   // tenant-level management). Site-scoped incident users use the per-site nav.
   { label: 'Incidents', href: '/admin/incidents', icon: '🎫', roles: [...INCIDENT_ROLES], centralOnly: true },
   { label: 'Controls', href: '/admin/controls', icon: '🧾', roles: [Role.SUPER_ADMIN, Role.CONTROLS, Role.BRAND_MANAGER, ...TENANT_MANAGEMENT], centralOnly: true },
+  { label: 'Culinary', href: '/admin/culinary', icon: '🍽️', roles: [Role.SUPER_ADMIN, Role.CULINARY, Role.BRAND_MANAGER, ...TENANT_MANAGEMENT], centralOnly: true },
 ];
 
 // Per-site navigation — every href resolves to an existing /sites/[id]/* route.
@@ -54,6 +55,7 @@ const siteNavigation = [
   { label: 'CAPAs', href: (id: string) => `/sites/${id}/quality/capas`, icon: '🛠️' },
   { label: 'Incidents', href: (id: string) => `/sites/${id}/incidents`, icon: '🎫', roles: [...INCIDENT_ROLES] },
   { label: 'Controls', href: (id: string) => `/sites/${id}/controls`, icon: '🧾', roles: [Role.SUPER_ADMIN, Role.CONTROLS, Role.BRAND_MANAGER, ...TENANT_MANAGEMENT, Role.SITE_LEAD] },
+  { label: 'Culinary', href: (id: string) => `/sites/${id}/culinary`, icon: '🍽️', roles: [Role.SUPER_ADMIN, Role.CULINARY, Role.BRAND_MANAGER, ...TENANT_MANAGEMENT, Role.SITE_LEAD] },
 ];
 
 export function Sidebar() {

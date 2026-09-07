@@ -16,6 +16,8 @@ export const ROLE_LABELS: Record<Role, string> = {
   [Role.QUALITY_AUDITOR]: 'Quality Auditor',
   [Role.MAINTENANCE_ASSURANCE]: 'Maintenance Assurance',
   [Role.CONTROLS]: 'Controls',
+  [Role.CULINARY]: 'Culinary',
+  [Role.IT]: 'IT',
   [Role.HR_ADMIN]: 'HR Admin',
   [Role.MARKETING_ADMIN]: 'Marketing Admin',
   [Role.CUSTOMER]: 'Customer',
