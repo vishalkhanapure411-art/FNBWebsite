@@ -53,6 +53,8 @@ model Tenant {
   closingPeriods     ClosingPeriod[]
   ingredients        Ingredient[]
   recipes            Recipe[]
+  menuPlans          MenuPlan[]
+  indents            Indent[]
 
   @@map("tenants")
 }
@@ -98,6 +100,9 @@ model Site {
   incidentCategories IncidentCategory[]
 
   closingPeriods    ClosingPeriod[]
+  menuPlans         MenuPlan[]
+  indents           Indent[]
+
   @@unique([tenantId, slug])
   @@index([tenantId])
   @@map("sites")
@@ -145,6 +150,9 @@ model User {
   incidentTicketsAssigned IncidentTicket[] @relation("IncidentAssignedTo")
   incidentComments       IncidentTicketComment[]
   closingPeriodsClosed   ClosingPeriod[] @relation("ClosingPeriodClosedBy")
+  menuPlansCreated       MenuPlan[] @relation("MenuPlanCreatedBy")
+  indentsRaised          Indent[] @relation("IndentRaisedBy")
+  indentsApproved        Indent[] @relation("IndentApprovedBy")
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -272,6 +280,7 @@ model MenuItem {
   modifierGroups  MenuItemModifierGroup[]
   orderItems      OrderItem[]
   recipes         Recipe[]
+  menuPlanItems   MenuPlanItem[]
 
   @@index([categoryId])
   @@index([menuId])
@@ -1404,6 +1413,28 @@ enum ClosingPeriodStatus {
   LOCKED
 }
 
+enum MenuPlanStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum MealSlot {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACKS
+  ALL_DAY
+}
+
+enum IndentStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  ISSUED
+  CANCELLED
+}
+
 model Ingredient {
   id          String         @id @default(uuid())
   tenantId    String
@@ -1417,6 +1448,7 @@ model Ingredient {
 
   tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   recipeLines RecipeIngredient[]
+  indentLines IndentLine[]
 
   @@unique([tenantId, name])
   @@index([tenantId, active])
@@ -1484,4 +1516,97 @@ model ClosingPeriod {
   @@unique([tenantId, siteId, label])
   @@index([tenantId, status])
   @@map("closing_periods")
+}
+
+// ══════════════════════════════════════════════════
+// CULINARY / MENU PLANNING (cycle menu plans + indents)
+// Culinary plans cycle menus for a fixed duration, then raises
+// ingredient "indents" (demand requisitions) derived from those plans.
+// ══════════════════════════════════════════════════
+
+model MenuPlan {
+  id          String         @id @default(uuid())
+  tenantId    String
+  siteId      String?
+  name        String
+  startDate   DateTime
+  endDate     DateTime
+  status      MenuPlanStatus @default(DRAFT)
+  notes       String?
+  createdById String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  tenant    Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  site      Site?           @relation(fields: [siteId], references: [id], onDelete: SetNull)
+  createdBy User?           @relation("MenuPlanCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  items     MenuPlanItem[]
+  indents   Indent[]
+
+  @@index([tenantId, status])
+  @@index([tenantId, siteId])
+  @@map("menu_plans")
+}
+
+model MenuPlanItem {
+  id          String   @id @default(uuid())
+  menuPlanId  String
+  menuItemId  String
+  dayIndex    Int      @default(0)
+  mealSlot    MealSlot @default(ALL_DAY)
+  plannedQty  Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  menuPlan MenuPlan  @relation(fields: [menuPlanId], references: [id], onDelete: Cascade)
+  menuItem MenuItem  @relation(fields: [menuItemId], references: [id], onDelete: Restrict)
+
+  @@index([menuPlanId])
+  @@index([menuItemId])
+  @@map("menu_plan_items")
+}
+
+model Indent {
+  id           String       @id @default(uuid())
+  tenantId     String
+  siteId       String?
+  menuPlanId   String
+  label        String
+  status       IndentStatus @default(DRAFT)
+  notes        String?
+  raisedById   String?
+  approvedById String?
+  submittedAt  DateTime?
+  approvedAt   DateTime?
+  issuedAt     DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  tenant     Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  site       Site?        @relation(fields: [siteId], references: [id], onDelete: SetNull)
+  menuPlan   MenuPlan     @relation(fields: [menuPlanId], references: [id], onDelete: Cascade)
+  raisedBy   User?        @relation("IndentRaisedBy", fields: [raisedById], references: [id], onDelete: SetNull)
+  approvedBy User?        @relation("IndentApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  lines      IndentLine[]
+
+  @@index([tenantId, status])
+  @@index([tenantId, siteId])
+  @@map("indents")
+}
+
+model IndentLine {
+  id           String         @id @default(uuid())
+  indentId     String
+  ingredientId String
+  requiredQty  Decimal        @db.Decimal(12, 3)
+  unit         IngredientUnit
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  indent     Indent     @relation(fields: [indentId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+
+  @@index([indentId])
+  @@index([ingredientId])
+  @@map("indent_lines")
 }

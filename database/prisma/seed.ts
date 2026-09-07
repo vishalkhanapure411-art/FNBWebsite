@@ -2122,6 +2122,71 @@ async function main() {
   });
   console.log('  ✅ Closing Periods: 1 LOCKED (previous month) + 1 OPEN (current) - Mumbai');
 
+  // ═══════════════════════════════════════════
+  // 9. CULINARY / MENU PLANNING seed
+  // one ACTIVE "Mumbai Weekly Cycle" plan + one DRAFT indent (with hand-computed lines)
+  // ═══════════════════════════════════════════
+  const vmCulinaryPlanId = 'mp-vm-weekly';
+  const vmCulinaryIndentId = 'ind-vm-mumbai-weekly';
+  const todayMidnight = new Date();
+  todayMidnight.setHours(0, 0, 0, 0);
+  const weekLater = new Date(todayMidnight.getTime() + 7 * 86400000);
+  await prisma.menuPlan.create({
+    data: {
+      id: vmCulinaryPlanId,
+      tenantId: vmTenant.id,
+      siteId: mumbaiSiteId,
+      name: 'Mumbai Weekly Cycle',
+      startDate: todayMidnight,
+      endDate: weekLater,
+      status: 'ACTIVE',
+      notes: 'Week 1 cycle menu — seeded for culinary verification',
+      createdById: 'u-vm-culinary',
+    },
+  });
+  const vmPlanItemLines: { menuItemId: string; dayIndex: number; mealSlot: string; plannedQty: number }[] = [
+    { menuItemId: 'mi-vm-butter-chicken', dayIndex: 1, mealSlot: 'LUNCH', plannedQty: 20 },
+    { menuItemId: 'mi-vm-paneer-tikka', dayIndex: 2, mealSlot: 'DINNER', plannedQty: 10 },
+    { menuItemId: 'mi-vm-dal-makhani', dayIndex: 3, mealSlot: 'LUNCH', plannedQty: 12 },
+    { menuItemId: 'mi-vm-biryani', dayIndex: 4, mealSlot: 'DINNER', plannedQty: 15 },
+    { menuItemId: 'mi-vm-naan', dayIndex: 0, mealSlot: 'ALL_DAY', plannedQty: 40 },
+  ];
+  await prisma.menuPlanItem.createMany({
+    data: vmPlanItemLines.map((l) => ({
+      menuPlanId: vmCulinaryPlanId,
+      menuItemId: l.menuItemId,
+      dayIndex: l.dayIndex,
+      mealSlot: l.mealSlot as never,
+      plannedQty: l.plannedQty,
+    })),
+  });
+  console.log('  ✅ Culinary: Menu plan "Mumbai Weekly Cycle" (ACTIVE, 5 items)');
+
+  // DRAFT indent derived from the plan; a few representative hand-computed lines:
+  // chicken = 0.25 × 20 = 5 KG, butter = 0.05×20 + 0.03×12 + 0.03×(40/6) ≈ 1.36 KG,
+  // tomato = 0.15×20 + 0.1×12 + 0.1×(15/2) = 4.95 KG, rice = 0.4×(15/2) = 3 KG.
+  await prisma.indent.create({
+    data: {
+      id: vmCulinaryIndentId,
+      tenantId: vmTenant.id,
+      siteId: mumbaiSiteId,
+      menuPlanId: vmCulinaryPlanId,
+      label: 'Mumbai Weekly Cycle — Indent 1',
+      notes: 'Seeded draft indent for culinary verification',
+      status: 'DRAFT',
+      raisedById: 'u-vm-culinary',
+    },
+  });
+  await prisma.indentLine.createMany({
+    data: [
+      { indentId: vmCulinaryIndentId, ingredientId: vmIngredientMap.get('chicken')!, requiredQty: 5.0, unit: 'KG' },
+      { indentId: vmCulinaryIndentId, ingredientId: vmIngredientMap.get('butter')!, requiredQty: 1.36, unit: 'KG' },
+      { indentId: vmCulinaryIndentId, ingredientId: vmIngredientMap.get('tomato')!, requiredQty: 4.95, unit: 'KG' },
+      { indentId: vmCulinaryIndentId, ingredientId: vmIngredientMap.get('rice')!, requiredQty: 3.0, unit: 'KG' },
+    ],
+  });
+  console.log('  ✅ Culinary: DRAFT indent "Mumbai Weekly Cycle — Indent 1" (4 representative lines)');
+
 
   console.log('\n🎉 Seed complete!');
 }
