@@ -15,6 +15,8 @@ export enum Role {
   CUSTOMER = 'CUSTOMER',
   MAINTENANCE_ASSURANCE = 'MAINTENANCE_ASSURANCE',
   CONTROLS = 'CONTROLS',
+  CULINARY = 'CULINARY',
+  IT = 'IT',
 }
 
 // Tenant-wide management roles. These mirror BRAND_MANAGER's access on

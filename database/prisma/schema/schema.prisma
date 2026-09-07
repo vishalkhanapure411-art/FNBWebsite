@@ -1044,6 +1044,8 @@ enum Role {
   CUSTOMER
   MAINTENANCE_ASSURANCE
   CONTROLS
+  CULINARY
+  IT
 }
 
 enum UserStatus {

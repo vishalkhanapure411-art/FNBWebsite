@@ -1896,6 +1896,56 @@ async function main() {
   console.log(`  ✅ Users: 2 central MAINTENANCE_ASSURANCE/CONTROLS + ${vmAssuranceSiteCount} site-level (${vmCities.length} branches × 2)`);
 
   // ═══════════════════════════════════════════
+  // 7.8 CULINARY + IT users
+  // ═══════════════════════════════════════════
+  const vmCulinaryItCentral = [
+    { id: 'u-vm-culinary', email: 'vishal.culinary@vishalmc.in', firstName: 'Culinary', lastName: 'Central CUL', role: 'CULINARY' },
+    { id: 'u-vm-it', email: 'vishal.it@vishalmc.in', firstName: 'IT', lastName: 'Central IT', role: 'IT' },
+  ] as const;
+  for (const u of vmCulinaryItCentral) {
+    await prisma.user.create({
+      data: {
+        id: u.id,
+        tenantId: vmTenant.id,
+        email: u.email,
+        passwordHash: staffPasswordHash,
+        firstName: u.firstName,
+        lastName: u.lastName,
+        role: u.role as never,
+        status: 'ACTIVE',
+        lastLoginAt: new Date(),
+      },
+    });
+    console.log(`  ✅ User: ${u.firstName} ${u.lastName} (${u.role}, central) — ${u.email}`);
+  }
+
+  const vmCulinaryItSiteRoles = [
+    { suffix: 'culinary', role: 'CULINARY', lastName: 'Culinary' },
+    { suffix: 'it', role: 'IT', lastName: 'IT' },
+  ] as const;
+  let vmCulinaryItSiteCount = 0;
+  for (const c of vmCities) {
+    for (const r of vmCulinaryItSiteRoles) {
+      await prisma.user.create({
+        data: {
+          id: `u-vm-${c.slug}-${r.suffix}`,
+          tenantId: vmTenant.id,
+          siteId: vmSites.get(c.slug)!.id,
+          email: `${c.slug}.${r.suffix}@vishalmc.in`,
+          passwordHash: staffPasswordHash,
+          firstName: c.city,
+          lastName: r.lastName,
+          role: r.role as never,
+          status: 'ACTIVE',
+          lastLoginAt: new Date(),
+        },
+      });
+      vmCulinaryItSiteCount += 1;
+    }
+  }
+  console.log(`  ✅ Users: 2 central CULINARY/IT + ${vmCulinaryItSiteCount} site-level (${vmCities.length} branches × 2)`);
+
+  // ═══════════════════════════════════════════
   // 8. CONTROLS / PRODUCT MANAGEMENT seed
   // ingredients -> recipes (BOM + computed cost) -> closing periods
   // ═══════════════════════════════════════════
