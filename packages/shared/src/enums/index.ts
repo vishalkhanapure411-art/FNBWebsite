@@ -28,4 +28,4 @@ export {
   IncidentSeverity,
   IncidentStatus,
 } from './incident';
-export { IngredientUnit, ClosingPeriodStatus } from './controls';
+export { IngredientUnit, ClosingPeriodStatus, RecipeStatus } from './controls';

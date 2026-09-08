@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { Role, IngredientUnit, ClosingPeriodStatus } from '@omniops/shared';
+import { Role, IngredientUnit, ClosingPeriodStatus, RecipeStatus } from '@omniops/shared';
 import { Prisma, OrderStatus } from '@prisma/client';
 import {
   CreateIngredientDto,
@@ -60,6 +60,11 @@ export class ControlsService {
 
   private round(n: number): number {
     return Math.round(n * 100) / 100;
+  }
+
+  /** The JWT exposes the user id as `sub` (see nestjs-auth-guards skill). */
+  private userId(user: AuthUser): string {
+    return user.sub ?? '';
   }
 
   // ──────────────────────────────────────────────────────────────
@@ -150,15 +155,23 @@ export class ControlsService {
       throw new ForbiddenException('Menu item not in your tenant');
     }
     const { costPerServe, lines } = await this.computeCost(dto.lines, menuTenantId, dto.yieldQty);
+    // Approval rule: central Controls (siteId == null) recipes are APPROVED
+    // immediately; site-level submissions start PENDING until the central
+    // Controls team approves them.
+    const isCentral = user.siteId == null;
     const recipe = await this.prisma.recipe.create({
       data: {
         tenantId: menuTenantId,
         menuItemId: dto.menuItemId,
+        siteId: isCentral ? null : (user.siteId ?? null),
         name: dto.name ?? menuItem.name,
         yieldQty: dto.yieldQty ?? 1,
         version: 1,
         costPerServe,
+        status: isCentral ? RecipeStatus.APPROVED : RecipeStatus.PENDING,
         active: true,
+        approvedById: isCentral ? this.userId(user) : null,
+        approvedAt: isCentral ? new Date() : null,
         lines: {
           create: lines.map((l) => ({
             ingredientId: l.ingredientId,
@@ -217,17 +230,25 @@ export class ControlsService {
     );
     const nextVersion = existing.version + 1;
 
+    // Approval rule mirrors createRecipe: central edits are APPROVED,
+    // site edits re-enter the approval queue as PENDING.
+    const isCentral = user.siteId == null;
+
     // Create a new version row; deactivate the previous one (versioning).
     const [newRecipe] = await this.prisma.$transaction([
       this.prisma.recipe.create({
         data: {
           tenantId: existing.tenantId,
           menuItemId: existing.menuItemId,
+          siteId: existing.siteId ?? (user.siteId ?? null),
           name: dto.name ?? existing.name,
           yieldQty: dto.yieldQty ?? existing.yieldQty,
           version: nextVersion,
           costPerServe,
+          status: isCentral ? RecipeStatus.APPROVED : RecipeStatus.PENDING,
           active: dto.active ?? true,
+          approvedById: isCentral ? this.userId(user) : null,
+          approvedAt: isCentral ? new Date() : null,
           lines: {
             create: lines.map((l) => ({
               ingredientId: l.ingredientId,
@@ -241,6 +262,37 @@ export class ControlsService {
       this.prisma.recipe.update({ where: { id: existing.id }, data: { active: false } }),
     ]);
     return { success: true, data: newRecipe, previousVersion: existing.version };
+  }
+
+  /** Central Controls approval: PENDING/REJECTED → APPROVED (+ active). */
+  async approveRecipe(id: string, user: AuthUser) {
+    const existing = await this.findRecipe(id, user);
+    const updated = await this.prisma.recipe.update({
+      where: { id: existing.id },
+      data: {
+        status: RecipeStatus.APPROVED,
+        active: true,
+        approvedById: this.userId(user),
+        approvedAt: new Date(),
+      },
+      include: { lines: { include: { ingredient: true } }, menuItem: true },
+    });
+    return { success: true, data: updated };
+  }
+
+  /** Central Controls rejection: → REJECTED (stays out of COGS roll-up). */
+  async rejectRecipe(id: string, user: AuthUser) {
+    const existing = await this.findRecipe(id, user);
+    const updated = await this.prisma.recipe.update({
+      where: { id: existing.id },
+      data: {
+        status: RecipeStatus.REJECTED,
+        approvedById: null,
+        approvedAt: null,
+      },
+      include: { lines: { include: { ingredient: true } }, menuItem: true },
+    });
+    return { success: true, data: updated };
   }
 
   private async findRecipe(id: string, user: AuthUser) {
@@ -295,9 +347,10 @@ export class ControlsService {
       include: { items: { include: { menuItem: true } } },
     });
 
-    // Latest active recipe cost per menu item
+    // Latest active recipe cost per menu item (APPROVED recipes only —
+    // pending/rejected site submissions must not hit COGS).
     const recipes = await this.prisma.recipe.findMany({
-      where: { tenantId: site.tenantId, active: true },
+      where: { tenantId: site.tenantId, active: true, status: RecipeStatus.APPROVED },
       orderBy: { version: 'desc' },
     });
     const costByMenu = new Map<string, number>();
@@ -454,7 +507,7 @@ export class ControlsService {
     });
 
     const recipes = await this.prisma.recipe.findMany({
-      where: { tenantId: period.tenantId, active: true },
+      where: { tenantId: period.tenantId, active: true, status: RecipeStatus.APPROVED },
       orderBy: { version: 'desc' },
     });
     const costByMenu = new Map<string, number>();

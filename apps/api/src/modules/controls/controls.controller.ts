@@ -23,6 +23,7 @@ import {
   ClosingsQueryDto,
 } from './dto';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { CentralControlsGuard } from '../../common/guards/central-controls.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role, TENANT_ADMIN_ROLES } from '@omniops/shared';
 
@@ -113,6 +114,22 @@ export class ControlsController {
   @ApiOperation({ summary: 'Update a recipe — creates a new version, recomputes costPerServe' })
   updateRecipe(@Param('id') id: string, @Body() dto: UpdateRecipeDto, @Req() req: Request) {
     return this.controlsService.updateRecipe(id, dto, (req as any).user);
+  }
+
+  @Post('recipes/:id/approve')
+  @Roles(...WRITE_ROLES)
+  @UseGuards(CentralControlsGuard)
+  @ApiOperation({ summary: 'Approve a site-submitted recipe (central CONTROLS / SUPER_ADMIN only)' })
+  approveRecipe(@Param('id') id: string, @Req() req: Request) {
+    return this.controlsService.approveRecipe(id, (req as any).user);
+  }
+
+  @Post('recipes/:id/reject')
+  @Roles(...WRITE_ROLES)
+  @UseGuards(CentralControlsGuard)
+  @ApiOperation({ summary: 'Reject a site-submitted recipe (central CONTROLS / SUPER_ADMIN only)' })
+  rejectRecipe(@Param('id') id: string, @Req() req: Request) {
+    return this.controlsService.rejectRecipe(id, (req as any).user);
   }
 
   // ── COGS report ──

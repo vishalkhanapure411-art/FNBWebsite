@@ -28,6 +28,7 @@ import {
   UpdateModifierDto,
 } from './dto';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { CentralControlsGuard } from '../../common/guards/central-controls.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role, TENANT_ADMIN_ROLES } from '@omniops/shared';
 
@@ -43,7 +44,8 @@ export class MenuController {
   // ══════════════════════════════════════════════════
 
   @Post()
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.CONTROLS)
+  @UseGuards(CentralControlsGuard)
   @ApiOperation({ summary: 'Create a menu' })
   create(@Body() dto: CreateMenuDto) {
     return this.menuService.create(dto);
@@ -85,7 +87,8 @@ export class MenuController {
   }
 
   @Post(':id/assign')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.CONTROLS)
+  @UseGuards(CentralControlsGuard)
   @ApiOperation({ summary: 'Assign menu to sites' })
   assign(@Param('id') id: string, @Body() dto: MenuAssignDto, @Req() req: Request) {
     return this.menuService.assignToSites(id, dto, req.user as any);
@@ -103,7 +106,8 @@ export class MenuController {
   // ══════════════════════════════════════════════════
 
   @Post(':menuId/categories')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.CONTROLS)
+  @UseGuards(CentralControlsGuard)
   @ApiOperation({ summary: 'Create a category under a menu' })
   createCategory(
     @Param('menuId') menuId: string,
@@ -121,7 +125,8 @@ export class MenuController {
   }
 
   @Patch(':menuId/categories/:categoryId')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.CONTROLS)
+  @UseGuards(CentralControlsGuard)
   @ApiOperation({ summary: 'Update a category' })
   updateCategory(
     @Param('menuId') menuId: string,
@@ -133,7 +138,8 @@ export class MenuController {
   }
 
   @Delete(':menuId/categories/:categoryId')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.CONTROLS)
+  @UseGuards(CentralControlsGuard)
   @ApiOperation({ summary: 'Delete a category (cascade items)' })
   deleteCategory(
     @Param('menuId') menuId: string,
@@ -148,7 +154,8 @@ export class MenuController {
   // ══════════════════════════════════════════════════
 
   @Post(':menuId/categories/:categoryId/items')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.CONTROLS)
+  @UseGuards(CentralControlsGuard)
   @ApiOperation({ summary: 'Create a menu item with full fields' })
   createItem(
     @Param('menuId') menuId: string,
@@ -171,7 +178,8 @@ export class MenuController {
   }
 
   @Patch(':menuId/categories/:categoryId/items/:itemId')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.CONTROLS)
+  @UseGuards(CentralControlsGuard)
   @ApiOperation({ summary: 'Update item. Set status=EIGHTY_SIX to 86' })
   updateItem(
     @Param('menuId') menuId: string,
@@ -184,7 +192,8 @@ export class MenuController {
   }
 
   @Delete(':menuId/categories/:categoryId/items/:itemId')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.CONTROLS)
+  @UseGuards(CentralControlsGuard)
   @ApiOperation({ summary: 'Soft-delete item (DISCONTINUED)' })
   deleteItem(
     @Param('menuId') menuId: string,
@@ -200,7 +209,8 @@ export class MenuController {
   // ══════════════════════════════════════════════════
 
   @Post('items/:itemId/modifier-groups')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.CONTROLS)
+  @UseGuards(CentralControlsGuard)
   @ApiOperation({ summary: 'Create modifier group for an item' })
   createModifierGroup(
     @Param('itemId') itemId: string,
@@ -218,7 +228,8 @@ export class MenuController {
   }
 
   @Patch('items/:itemId/modifier-groups/:groupId')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.CONTROLS)
+  @UseGuards(CentralControlsGuard)
   @ApiOperation({ summary: 'Update modifier group' })
   updateModifierGroup(
     @Param('itemId') itemId: string,
@@ -230,7 +241,8 @@ export class MenuController {
   }
 
   @Delete('items/:itemId/modifier-groups/:groupId')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.CONTROLS)
+  @UseGuards(CentralControlsGuard)
   @ApiOperation({ summary: 'Delete modifier group with modifiers' })
   deleteModifierGroup(
     @Param('itemId') itemId: string,
@@ -245,7 +257,8 @@ export class MenuController {
   // ══════════════════════════════════════════════════
 
   @Post('modifier-groups/:groupId/modifiers')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.CONTROLS)
+  @UseGuards(CentralControlsGuard)
   @ApiOperation({ summary: 'Create modifier in a group' })
   createModifier(
     @Param('groupId') groupId: string,
@@ -263,7 +276,8 @@ export class MenuController {
   }
 
   @Patch('modifier-groups/:groupId/modifiers/:modifierId')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.CONTROLS)
+  @UseGuards(CentralControlsGuard)
   @ApiOperation({ summary: 'Update a modifier' })
   updateModifier(
     @Param('groupId') groupId: string,
@@ -275,7 +289,8 @@ export class MenuController {
   }
 
   @Delete('modifier-groups/:groupId/modifiers/:modifierId')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.CONTROLS)
+  @UseGuards(CentralControlsGuard)
   @ApiOperation({ summary: 'Delete a modifier' })
   deleteModifier(
     @Param('groupId') groupId: string,
