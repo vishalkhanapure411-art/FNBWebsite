@@ -5,26 +5,16 @@ export const dynamic = 'force-dynamic';
 
 export default function LoginPage() {
   return (
-    <div className="relative min-h-screen w-full overflow-hidden">
-      {/* Full-viewport background image */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/backgrounds/login-v1.png')" }}
-      />
-      {/* Subtle dark overlay for card contrast (light & dark mode) */}
-      <div aria-hidden="true" className="absolute inset-0 bg-black/50" />
-      <div className="relative z-10">
-        <Suspense
-          fallback={
-            <div className="flex min-h-[80vh] items-center justify-center">
-              <div className="text-white/80">Loading...</div>
-            </div>
-          }
-        >
-          <LoginForm />
-        </Suspense>
-      </div>
+    <div className="bg-white font-body text-navy-900 antialiased min-h-screen flex flex-col selection:bg-primary/30 selection:text-navy-900">
+      <Suspense
+        fallback={
+          <div className="flex min-h-screen items-center justify-center text-navy-900 font-body text-sm">
+            Loading…
+          </div>
+        }
+      >
+        <LoginForm />
+      </Suspense>
     </div>
   );
 }

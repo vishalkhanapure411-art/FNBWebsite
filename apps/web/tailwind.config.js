@@ -5,6 +5,17 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Login/auth mockup design tokens (source: `1. login/code.html` + DESIGN.md)
+        primary: '#D4AF37',
+        'primary-dark': '#b89428',
+        'navy-900': '#041329',
+        'navy-800': '#0a1f3d',
+        'navy-700': '#112a52',
+        'slate-surface': '#F8FAFC',
+        'slate-surface-subtle': '#F1F5F9',
+        'slate-border': '#E2E8F0',
+        'slate-muted': '#64748B',
+        'slate-body': '#475569',
         // OmniOps brand palette
         brand: {
           50: '#eff6ff',
@@ -35,6 +46,8 @@ module.exports = {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        body: ['Inter', 'sans-serif'],
+        headline: ['Plus Jakarta Sans', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
       },
       spacing: {
@@ -42,6 +55,12 @@ module.exports = {
         88: '22rem',
         112: '28rem',
         128: '32rem',
+      },
+      boxShadow: {
+        // Tailwind v4 shadow scale names used by the login mockup (`1. login/code.html`),
+        // which are not part of the v3.4 default theme.
+        '2xs': '0 0 0 1px rgb(0 0 0 / 0.05)',
+        xs: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
       },
       borderRadius: {
         '4xl': '2rem',
