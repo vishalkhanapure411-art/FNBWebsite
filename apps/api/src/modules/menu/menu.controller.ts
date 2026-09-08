@@ -50,21 +50,21 @@ export class MenuController {
   }
 
   @Get()
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.CULINARY)
   @ApiOperation({ summary: 'List menus with filtering' })
   findAll(@Query() query: QueryMenuDto, @Req() req: Request) {
     return this.menuService.findAll(query, req.user as any);
   }
 
   @Get('available/:siteId')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.FOH, Role.KITCHEN_STAFF, Role.CUSTOMER)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.FOH, Role.KITCHEN_STAFF, Role.CUSTOMER, Role.CULINARY)
   @ApiOperation({ summary: 'Get available menu for a site (customer/POS facing)' })
   getAvailable(@Param('siteId') siteId: string, @Req() req: Request) {
     return this.menuService.getAvailableMenu(siteId, req.user as any);
   }
 
   @Get(':id')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.CULINARY)
   @ApiOperation({ summary: 'Get menu with categories, items, modifiers' })
   findById(@Param('id') id: string, @Req() req: Request) {
     return this.menuService.findById(id, req.user as any);
@@ -114,7 +114,7 @@ export class MenuController {
   }
 
   @Get(':menuId/categories')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.FOH, Role.KITCHEN_STAFF)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.FOH, Role.KITCHEN_STAFF, Role.CULINARY)
   @ApiOperation({ summary: 'List categories in a menu' })
   listCategories(@Param('menuId') menuId: string, @Req() req: Request) {
     return this.menuService.listCategories(menuId, req.user as any);
@@ -160,7 +160,7 @@ export class MenuController {
   }
 
   @Get(':menuId/categories/:categoryId/items')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.FOH, Role.KITCHEN_STAFF)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.FOH, Role.KITCHEN_STAFF, Role.CULINARY)
   @ApiOperation({ summary: 'List items in a category with modifier groups' })
   listItems(
     @Param('menuId') menuId: string,
@@ -211,7 +211,7 @@ export class MenuController {
   }
 
   @Get('items/:itemId/modifier-groups')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.FOH, Role.KITCHEN_STAFF)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.FOH, Role.KITCHEN_STAFF, Role.CULINARY)
   @ApiOperation({ summary: 'List modifier groups for an item' })
   listModifierGroups(@Param('itemId') itemId: string, @Req() req: Request) {
     return this.menuService.listModifierGroups(itemId, req.user as any);
