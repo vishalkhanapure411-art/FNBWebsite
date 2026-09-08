@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600" fill="none" role="img" aria-label="OMNIOPS watermark">
+  <!-- Local watermark replacing the fragile lh3.googleusercontent.com asset
+       referenced in `1. login/code.html`. Rendered at low opacity + grayscale
+       by the login page, so it reads as a faint architectural backdrop. -->
+  <g transform="rotate(-12 600 300)">
+    <circle cx="600" cy="300" r="238" stroke="#041329" stroke-width="2" opacity="0.55" />
+    <circle cx="600" cy="300" r="196" stroke="#D4AF37" stroke-width="3" opacity="0.6" />
+    <circle cx="600" cy="300" r="164" stroke="#041329" stroke-width="1.5" opacity="0.4" />
+    <path d="M600 62 v476 M362 300 h476" stroke="#041329" stroke-width="1.5" opacity="0.25" />
+    <path d="M600 300 L338 142 M600 300 L600 62 M600 300 L862 142" stroke="#D4AF37" stroke-width="2" opacity="0.4" />
+    <text x="600" y="330" text-anchor="middle" dominant-baseline="middle" font-family="'Plus Jakarta Sans', 'Inter', sans-serif" font-size="132" font-weight="800" letter-spacing="14" fill="#041329">OMNIOPS<span fill="#D4AF37">.AI</span></text>
+    <text x="600" y="408" text-anchor="middle" dominant-baseline="middle" font-family="'JetBrains Mono', monospace" font-size="30" font-weight="600" letter-spacing="22" fill="#041329" opacity="0.7">STAFF CONSOLE</text>
+  </g>
+</svg>
