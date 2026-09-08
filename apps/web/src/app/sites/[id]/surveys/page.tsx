@@ -61,7 +61,7 @@ export default function SiteSurveysPage() {
     try {
       const res = await getTemplates();
       setTemplates((res.data ?? []).filter((t) => t.status === 'PUBLISHED'));
-    } catch {}
+    } catch { /* template list is optional — the creation form still works */ }
   };
 
   const handleCreate = async (e: React.FormEvent) => {

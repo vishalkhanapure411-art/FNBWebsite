@@ -27,7 +27,6 @@ const DEPARTMENTS: IncidentDepartment[] = [
   IncidentDepartment.QA,
   IncidentDepartment.RA,
   IncidentDepartment.MAINTENANCE,
-  IncidentDepartment.CONTROLS,
 ];
 const SEVERITIES: IncidentSeverity[] = [
   IncidentSeverity.LOW,
@@ -146,7 +145,7 @@ export function IncidentConsole({ presetSiteId }: { presetSiteId?: string }) {
         <div>
           <h1 className="text-3xl font-bold text-surface-900 dark:text-surface-50">Incidents</h1>
           <p className="text-surface-500 mt-1">
-            Unified ticketing for Quality, Revenue Assurance, Maintenance & Controls
+            Unified ticketing for Quality, Revenue Assurance & Maintenance
           </p>
         </div>
         {canCreate && (

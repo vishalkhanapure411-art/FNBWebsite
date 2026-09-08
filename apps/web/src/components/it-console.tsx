@@ -395,7 +395,7 @@ function RoutingsTab({
     setItemsMsg('');
     void (async () => {
       try {
-        let flat: { id: string; name: string }[] = [];
+        const flat: { id: string; name: string }[] = [];
         if (siteIdProp) {
           const r = await getAvailableMenu(site);
           for (const m of r.data ?? []) {

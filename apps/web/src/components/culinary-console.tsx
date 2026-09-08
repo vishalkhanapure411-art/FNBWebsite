@@ -308,7 +308,7 @@ function PlanDetail({
             // Central view has no site — fall back to the tenant's menus/items.
             const m = await getMenus();
             const all = Array.isArray(m.data) ? m.data : [];
-            let flat: { id: string; name: string; price: number }[] = [];
+            const flat: { id: string; name: string; price: number }[] = [];
             let used: string | null = null;
             for (const menu of all) {
               if (flat.length > 0) break;

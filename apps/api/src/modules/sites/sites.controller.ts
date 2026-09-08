@@ -30,7 +30,7 @@ export class SitesController {
   constructor(private readonly sitesService: SitesService) {}
 
   @Get()
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.CONTROLS)
   @ApiOperation({ summary: 'List sites with pagination, filtering, and role-based scoping' })
   findAll(@Query() query: QuerySitesDto, @Req() req: Request) {
     return this.sitesService.findAll(query, req.user as any);
@@ -59,7 +59,7 @@ export class SitesController {
   }
 
   @Get(':id')
-  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD)
+  @Roles(Role.SUPER_ADMIN, Role.BRAND_MANAGER, ...TENANT_ADMIN_ROLES, Role.SITE_LEAD, Role.CONTROLS)
   @ApiOperation({ summary: 'Get site details with tenant info' })
   findById(@Param('id') id: string, @Req() req: Request) {
     return this.sitesService.findById(id, req.user as any);
