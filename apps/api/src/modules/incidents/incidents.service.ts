@@ -30,12 +30,12 @@ type AuthUser = {
  * Role → department mapping. Each assurance department user answers to exactly
  * ONE department in the unified engine. FRANCHISE_OWNER / BRAND_MANAGER / tenant
  * admins / SUPER_ADMIN get no department (read-all instead).
+ * CONTROLS no longer participates in incident ticketing (owner direction).
  */
 const DEPT_BY_ROLE: Partial<Record<Role, IncidentDepartment>> = {
   [Role.QUALITY_AUDITOR]: IncidentDepartment.QA,
   [Role.REVENUE_ASSURANCE]: IncidentDepartment.RA,
   [Role.MAINTENANCE_ASSURANCE]: IncidentDepartment.MAINTENANCE,
-  [Role.CONTROLS]: IncidentDepartment.CONTROLS,
 };
 
 /** Roles that can read across ALL departments (management read-only). */
@@ -60,7 +60,6 @@ const TICKET_PREFIX: Record<IncidentDepartment, string> = {
   [IncidentDepartment.QA]: 'QA',
   [IncidentDepartment.RA]: 'RA',
   [IncidentDepartment.MAINTENANCE]: 'MNT',
-  [IncidentDepartment.CONTROLS]: 'CTL',
 };
 
 const VALID_STATUS_TRANSITIONS: Record<IncidentStatus, IncidentStatus[]> = {

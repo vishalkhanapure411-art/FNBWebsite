@@ -136,7 +136,6 @@ const DEFAULT_PERMISSIONS: Record<Role, Record<string, boolean>> = {
   [Role.CONTROLS]: {
     ORDER_READ: true,
     SITE_READ: true,
-    INCIDENT_VIEW: true,
     FINANCE_VIEW: true,
   },
   [Role.CULINARY]: {

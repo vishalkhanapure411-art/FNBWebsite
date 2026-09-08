@@ -1,9 +1,10 @@
-// Unified incident-ticketing enums shared by QA / RA / Maintenance / Controls.
+// Unified incident-ticketing enums shared by QA / RA / Maintenance.
+// Controls no longer participates in incident ticketing (owner direction);
+// the CONTROLS department was removed from this enum.
 export enum IncidentDepartment {
   QA = 'QA',
   RA = 'RA',
   MAINTENANCE = 'MAINTENANCE',
-  CONTROLS = 'CONTROLS',
 }
 export enum IncidentSeverity {
   LOW = 'LOW',

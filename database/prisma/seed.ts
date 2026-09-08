@@ -1781,37 +1781,6 @@ async function main() {
       ],
     },
   ];
-  // CONTROLS
-  const ctlTaxonomy: CategorySeed[] = [
-    {
-      name: 'Menu & Pricing',
-      children: [
-        { name: 'Pricing Errors', children: ['Wrong price', 'Missing modifier charge', 'Incorrect discount', 'Price list mismatch'].map((n) => ({ name: n, children: [] })) },
-        { name: 'Recipes', children: ['Recipe mismatch', 'Yield variance', 'Standardisation', 'Costing error'].map((n) => ({ name: n, children: [] })) },
-      ],
-    },
-    {
-      name: 'Inventory / COGS',
-      children: [
-        { name: 'Variance', children: ['Stock variance', 'Wastage', 'Shrinkage', 'Damaged stock'].map((n) => ({ name: n, children: [] })) },
-        { name: 'Counting', children: ['Variance in count', 'Ghost stock', 'Cycle count issues', 'Counting error'].map((n) => ({ name: n, children: [] })) },
-      ],
-    },
-    {
-      name: 'Finance',
-      children: [
-        { name: 'Month-End', children: ['Reconciliation issues', 'Accruals', 'Cut-off breaches', 'GL mismatch'].map((n) => ({ name: n, children: [] })) },
-        { name: 'Taxation', children: ['GST mismatch', 'TDS', 'Invoice errors', 'Input credit'].map((n) => ({ name: n, children: [] })) },
-      ],
-    },
-    {
-      name: 'Supplier',
-      children: [
-        { name: 'Invoicing', children: ['Invoice mismatch', 'Duplicate invoice', 'Overbilling', 'Late invoice'].map((n) => ({ name: n, children: [] })) },
-        { name: 'Quality', children: ['Delivery quality', 'Short delivery', 'Pricing disputes', 'Contract terms'].map((n) => ({ name: n, children: [] })) },
-      ],
-    },
-  ];
 
   const seedCategoryTree = async (department: string, nodes: CategorySeed[]) => {
     const createNode = async (node: CategorySeed, level: number, parentId: string | null): Promise<void> => {
@@ -1838,7 +1807,6 @@ async function main() {
     { dept: 'QA', tree: qaTaxonomy },
     { dept: 'RA', tree: raTaxonomy },
     { dept: 'MAINTENANCE', tree: mntTaxonomy },
-    { dept: 'CONTROLS', tree: ctlTaxonomy },
   ];
   for (const { dept, tree } of taxonomies) {
     await seedCategoryTree(dept, tree);
@@ -2071,6 +2039,7 @@ async function main() {
         name: r.name,
         yieldQty: r.yieldQty,
         version: 1,
+        status: 'APPROVED',
         costPerServe,
         active: true,
         lines: {

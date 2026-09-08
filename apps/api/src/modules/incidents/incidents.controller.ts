@@ -23,12 +23,12 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { Role, TENANT_ADMIN_ROLES, IncidentDepartment } from '@omniops/shared';
 
 // Assurance departments (can read AND write their department's tickets) plus SUPER_ADMIN.
+// CONTROLS no longer participates in incident ticketing (owner direction).
 const DEPT_ROLES = [
   Role.SUPER_ADMIN,
   Role.QUALITY_AUDITOR,
   Role.REVENUE_ASSURANCE,
   Role.MAINTENANCE_ASSURANCE,
-  Role.CONTROLS,
 ];
 // Management roles get read-only visibility via ?scope=all.
 const READ_ALL_ROLES = [
