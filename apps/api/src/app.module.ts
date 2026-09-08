@@ -29,6 +29,7 @@ import { SignageModule } from './modules/signage/signage.module';
 import { IncidentsModule } from './modules/incidents/incidents.module';
 import { ControlsModule } from './modules/controls/controls.module';
 import { CulinaryModule } from './modules/culinary/culinary.module';
+import { ItModule } from './modules/it/it.module';
 import { HealthController } from './health.controller';
 import { KitchenGateway } from './common/gateways/kitchen.gateway';
 
@@ -58,6 +59,7 @@ import { KitchenGateway } from './common/gateways/kitchen.gateway';
     IncidentsModule,
     ControlsModule,
     CulinaryModule,
+    ItModule,
   ],
   controllers: [HealthController],
   providers: [

@@ -55,6 +55,8 @@ model Tenant {
   recipes            Recipe[]
   menuPlans          MenuPlan[]
   indents            Indent[]
+  devices            Device[]
+  productRoutings    ProductRouting[]
 
   @@map("tenants")
 }
@@ -102,6 +104,8 @@ model Site {
   closingPeriods    ClosingPeriod[]
   menuPlans         MenuPlan[]
   indents           Indent[]
+  devices           Device[]
+  productRoutings   ProductRouting[]
 
   @@unique([tenantId, slug])
   @@index([tenantId])
@@ -281,6 +285,7 @@ model MenuItem {
   orderItems      OrderItem[]
   recipes         Recipe[]
   menuPlanItems   MenuPlanItem[]
+  productRoutings ProductRouting[]
 
   @@index([categoryId])
   @@index([menuId])
@@ -1413,6 +1418,12 @@ enum ClosingPeriodStatus {
   LOCKED
 }
 
+enum DeviceType {
+  KDS_SCREEN
+  CDS_SCREEN
+  KOT_PRINTER
+}
+
 enum MenuPlanStatus {
   DRAFT
   ACTIVE
@@ -1516,6 +1527,58 @@ model ClosingPeriod {
   @@unique([tenantId, siteId, label])
   @@index([tenantId, status])
   @@map("closing_periods")
+}
+
+// ══════════════════════════════════════════════════
+// IT / DEVICE CONFIGURATION (kitchen & display hardware:
+// KDS screens, CDS screens, KOT printers, and product-to-KDS
+// routing — which menu item routes to which station/printer)
+// ══════════════════════════════════════════════════
+
+model Device {
+  id            String      @id @default(uuid())
+  tenantId      String
+  siteId        String
+  name          String
+  type          DeviceType
+  deviceId      String
+  station       Station?
+  ipAddress     String?
+  isOnline      Boolean     @default(false)
+  lastHeartbeat DateTime?
+  notes         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  tenant          Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  site            Site               @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  productRoutings ProductRouting[]   @relation("DeviceProductRoutings")
+
+  @@unique([siteId, deviceId])
+  @@index([tenantId, siteId])
+  @@index([siteId, type])
+  @@map("devices")
+}
+
+model ProductRouting {
+  id         String   @id @default(uuid())
+  tenantId   String
+  siteId     String
+  menuItemId String
+  station    Station
+  printerId  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  site     Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Restrict)
+  printer  Device?  @relation("DeviceProductRoutings", fields: [printerId], references: [id], onDelete: SetNull)
+
+  @@unique([siteId, menuItemId, station])
+  @@index([tenantId, siteId])
+  @@index([siteId, menuItemId])
+  @@map("product_routings")
 }
 
 // ══════════════════════════════════════════════════

@@ -2187,8 +2187,56 @@ async function main() {
   });
   console.log('  ✅ Culinary: DRAFT indent "Mumbai Weekly Cycle — Indent 1" (4 representative lines)');
 
+  // ═══════════════════════════════════════════
+  // 10. IT / DEVICE CONFIGURATION seed
+  // KDS/CDS screens + KOT printers and product-to-KDS routing (Mumbai)
+  // ═══════════════════════════════════════════
+  const vmItDevices = [
+    { id: 'dev-vm-mumbai-kds1', name: 'Kitchen Display 1 (Grill)', type: 'KDS_SCREEN', deviceId: 'KDS-1', station: 'GRILL', ipAddress: '192.168.1.50' },
+    { id: 'dev-vm-mumbai-kds2', name: 'Kitchen Display 2 (Fry)', type: 'KDS_SCREEN', deviceId: 'KDS-2', station: 'FRY', ipAddress: '192.168.1.51' },
+    { id: 'dev-vm-mumbai-cds1', name: 'Customer Display 1', type: 'CDS_SCREEN', deviceId: 'CDS-1', station: null, ipAddress: '192.168.1.52' },
+    { id: 'dev-vm-mumbai-printer-bar', name: 'Bar KOT Printer', type: 'KOT_PRINTER', deviceId: 'PRINTER-BAR', station: 'EXPO', ipAddress: '192.168.1.53' },
+  ] as const;
+  for (const d of vmItDevices) {
+    await prisma.device.create({
+      data: {
+        id: d.id,
+        tenantId: vmTenant.id,
+        siteId: mumbaiSiteId,
+        name: d.name,
+        type: d.type as never,
+        deviceId: d.deviceId,
+        station: d.station as never,
+        ipAddress: d.ipAddress,
+        notes: 'Seeded for IT verification',
+      },
+    });
+    console.log(`  ✅ Device: ${d.name} (${d.type}, ${d.deviceId})`);
+  }
+
+  const vmItRoutings = [
+    { id: 'pr-vm-mumbai-1', menuItemId: 'mi-vm-butter-chicken', station: 'GRILL', printerId: 'dev-vm-mumbai-printer-bar' },
+    { id: 'pr-vm-mumbai-2', menuItemId: 'mi-vm-naan', station: 'FRY', printerId: 'dev-vm-mumbai-printer-bar' },
+    { id: 'pr-vm-mumbai-3', menuItemId: 'mi-vm-mango-lassi', station: 'DRINKS', printerId: null },
+  ] as const;
+  for (const r of vmItRoutings) {
+    await prisma.productRouting.create({
+      data: {
+        id: r.id,
+        tenantId: vmTenant.id,
+        siteId: mumbaiSiteId,
+        menuItemId: r.menuItemId,
+        station: r.station as never,
+        printerId: r.printerId,
+      },
+    });
+    console.log(`  ✅ Routing: ${r.menuItemId} -> ${r.station}${r.printerId ? ` (printer: ${r.printerId})` : ''}`);
+  }
+  console.log(`  ✅ IT: ${vmItDevices.length} devices + ${vmItRoutings.length} product routings (Mumbai)`);
 
   console.log('\n🎉 Seed complete!');
+
+
 }
 
 main()
