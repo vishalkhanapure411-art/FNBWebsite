@@ -50,10 +50,11 @@ export function LoginForm() {
     try {
       await login(email, password, rememberMe);
 
-      // Set auth mirror cookie for middleware
+      // Set auth mirror cookie for middleware (navigation is driven by the
+      // isAuthenticated effect below — the single navigation authority — so the
+      // /dashboard route is only entered AFTER auth state is fully committed,
+      // avoiding double-navigation races during its hydration).
       document.cookie = 'omniops_auth=true; path=/; max-age=86400; SameSite=Lax';
-
-      router.push(redirectTo);
     } catch (err) {
       if (err instanceof ApiRequestError) {
         if (err.status === 401) {
