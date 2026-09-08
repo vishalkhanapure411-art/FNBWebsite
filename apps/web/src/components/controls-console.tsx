@@ -3,11 +3,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   listIngredients, createIngredient, updateIngredient, deleteIngredient,
-  listRecipes, createRecipe, getRecipeVersions,
+  listRecipes, createRecipe, getRecipeVersions, approveRecipe, rejectRecipe,
   getCogs, listClosings, createClosingPeriod, closeClosingPeriod,
   type Ingredient, type Recipe, type CogsData, type CogsRow, type ClosingPeriod,
 } from '@/lib/api/controls';
 import { useAuth } from '@/providers/auth-provider';
+import { RecipeStatus } from '@omniops/shared';
 
 const UNIT_OPTS = ['KG', 'G', 'L', 'ML', 'PCS', 'PACK'];
 const TABS = ['Ingredients', 'Recipes', 'COGS', 'Month Closing'] as const;
@@ -33,6 +34,10 @@ export function ControlsConsole({ siteId }: { siteId?: string }) {
     const role = user?.role;
     setCanWrite(role === 'SUPER_ADMIN' || role === 'CONTROLS');
   }, [user]);
+
+  // Central Controls / SUPER_ADMIN (no site) may approve or reject site-submitted
+  // recipes. Site-level CONTROLS users must NOT see the approve/reject actions.
+  const canApprove = !user?.siteId && (user?.role === 'CONTROLS' || user?.role === 'SUPER_ADMIN');
 
   const badge = (ok: boolean) => console.log('controls-console', siteId, tab);
 
@@ -102,7 +107,7 @@ export function ControlsConsole({ siteId }: { siteId?: string }) {
           onChanged={loadIngredients} setMsg={setMsg} />
       )}
       {tab === 'Recipes' && (
-        <RecipesTab recipes={recipes} canWrite={canWrite} onChanged={loadRecipes} setMsg={setMsg} />
+        <RecipesTab recipes={recipes} canWrite={canWrite} canApprove={canApprove} onChanged={loadRecipes} setMsg={setMsg} />
       )}
       {tab === 'COGS' && (
         <CogsTab from={from} to={to} setFrom={setFrom} setTo={setTo} cogs={cogs} runCogs={runCogs} />
@@ -193,7 +198,18 @@ function IngredientsTab({ ingredients, canWrite, siteId, onChanged, setMsg }: an
 }
 
 // ─────────── Recipes ───────────
-function RecipesTab({ recipes, canWrite, onChanged, setMsg }: any) {
+const RECIPE_STATUS_CLASSES: Record<RecipeStatus, string> = {
+  [RecipeStatus.PENDING]: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400',
+  [RecipeStatus.APPROVED]: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400',
+  [RecipeStatus.REJECTED]: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',
+};
+const RECIPE_STATUS_LABELS: Record<RecipeStatus, string> = {
+  [RecipeStatus.PENDING]: 'Pending approval',
+  [RecipeStatus.APPROVED]: 'Approved',
+  [RecipeStatus.REJECTED]: 'Rejected',
+};
+
+function RecipesTab({ recipes, canWrite, canApprove, onChanged, setMsg }: any) {
   const [menuItemId, setMenuItemId] = useState('');
   const [lines, setLines] = useState<{ ingredientId: string; qty: string }[]>([{ ingredientId: '', qty: '' }]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
@@ -209,7 +225,18 @@ function RecipesTab({ recipes, canWrite, onChanged, setMsg }: any) {
     try {
       const ls = lines.map((l) => ({ ingredientId: l.ingredientId, qty: parseFloat(l.qty), unit: 'KG' }));
       await createRecipe({ menuItemId, lines: ls });
-      setMsg('Recipe created (cost computed server-side)');
+      setMsg(canApprove ? 'Recipe created — approved (central)' : 'Recipe created — pending central approval');
+      await onChanged();
+    } catch (e) {
+      setMsg(`Error: ${(e as Error).message}`);
+    }
+  };
+
+  const act = async (id: string, action: 'approve' | 'reject') => {
+    try {
+      if (action === 'approve') await approveRecipe(id);
+      else await rejectRecipe(id);
+      setMsg(action === 'approve' ? 'Recipe approved' : 'Recipe rejected');
       await onChanged();
     } catch (e) {
       setMsg(`Error: ${(e as Error).message}`);
@@ -254,7 +281,7 @@ function RecipesTab({ recipes, canWrite, onChanged, setMsg }: any) {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs uppercase text-surface-400 dark:text-surface-500">
-                <th className="py-2 px-2">Menu item</th><th>Cost/serve</th><th>Version</th><th>Active</th><th></th>
+                <th className="py-2 px-2">Menu item</th><th>Cost/serve</th><th>Status</th><th>Version</th><th>Active</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -262,10 +289,33 @@ function RecipesTab({ recipes, canWrite, onChanged, setMsg }: any) {
                 <tr key={r.id} className="border-t border-surface-100 dark:border-surface-800">
                   <td className="py-2 px-2 font-medium">{r.menuItem?.name ?? r.name}</td>
                   <td>₹{r.costPerServe.toFixed(2)}</td>
+                  <td>
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${RECIPE_STATUS_CLASSES[r.status] ?? ''}`}>
+                      {RECIPE_STATUS_LABELS[r.status] ?? r.status}
+                    </span>
+                  </td>
                   <td>v{r.version}</td>
                   <td>{r.active ? 'Active' : 'Inactive'}</td>
                   <td>
-                    <button onClick={() => showVersions(r)} className="btn-ghost text-xs">History</button>
+                    <div className="flex items-center justify-end gap-1">
+                      {canApprove && (r.status === RecipeStatus.PENDING || r.status === RecipeStatus.REJECTED) && (
+                        <>
+                          <button
+                            onClick={() => act(r.id, 'approve')}
+                            className="rounded bg-emerald-600 px-2 py-1 text-xs text-white hover:bg-emerald-700"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => act(r.id, 'reject')}
+                            className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700"
+                          >
+                            Reject
+                          </button>
+                        </>
+                      )}
+                      <button onClick={() => showVersions(r)} className="btn-ghost text-xs">History</button>
+                    </div>
                   </td>
                 </tr>
               ))}

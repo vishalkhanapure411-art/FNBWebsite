@@ -1,4 +1,5 @@
 import { api } from '@/lib/api-client';
+import { RecipeStatus } from '@omniops/shared';
 
 export interface Ingredient {
   id: string;
@@ -26,6 +27,9 @@ export interface Recipe {
   version: number;
   costPerServe: number;
   active: boolean;
+  status: RecipeStatus;
+  approvedById: string | null;
+  approvedAt: string | null;
   menuItem?: { id: string; name: string; price: number };
   lines?: RecipeLine[];
 }
@@ -92,6 +96,12 @@ export async function updateRecipe(id: string, body: { name?: string; yieldQty?:
 }
 export async function getRecipeVersions(id: string) {
   return api.get<{ success: boolean; data: Recipe[] }>(`/controls/recipes/${id}/versions`);
+}
+export async function approveRecipe(id: string) {
+  return api.post<{ success: boolean; data: Recipe }>(`/controls/recipes/${id}/approve`);
+}
+export async function rejectRecipe(id: string) {
+  return api.post<{ success: boolean; data: Recipe }>(`/controls/recipes/${id}/reject`);
 }
 
 // ── COGS ──
