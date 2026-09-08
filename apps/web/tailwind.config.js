@@ -56,6 +56,12 @@ module.exports = {
         112: '28rem',
         128: '32rem',
       },
+      boxShadow: {
+        // Tailwind v4 shadow scale names used by the login mockup (`1. login/code.html`),
+        // which are not part of the v3.4 default theme.
+        '2xs': '0 0 0 1px rgb(0 0 0 / 0.05)',
+        xs: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+      },
       borderRadius: {
         '4xl': '2rem',
       },
