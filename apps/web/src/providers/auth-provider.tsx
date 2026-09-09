@@ -6,6 +6,7 @@ import React, {
   useState,
   useCallback,
   useEffect,
+  useRef,
   ReactNode,
 } from 'react';
 import { useRouter } from 'next/navigation';
@@ -45,10 +46,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  // Monotonic session version. `login()` bumps it; the mount-time `restoreSession`
+  // captures it before its async round-trip and discards its result if a login
+  // happened in the meantime — so an in-flight `/auth/me` can never clobber a
+  // freshly logged-in user (or wipe tokens on a race-y 401) while the app is
+  // navigating to /dashboard after a successful sign-in.
+  const sessionVersionRef = useRef(0);
 
   // Restore session on mount
   useEffect(() => {
     const restoreSession = async () => {
+      const versionAtStart = sessionVersionRef.current;
       const token = getStoredToken();
       if (!token) {
         setIsLoading(false);
@@ -57,14 +65,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       try {
         const response = await api.get<{ data: User }>('/auth/me');
+        if (sessionVersionRef.current !== versionAtStart) return; // superseded by login()
         setUser(response.data ?? (response as unknown as User));
       } catch {
-        // Token expired or invalid — clear it
-        setAccessToken(null);
-        setRefreshToken(null);
-        setUser(null);
+        // Token expired or invalid — clear it, unless a login happened meanwhile
+        if (sessionVersionRef.current === versionAtStart) {
+          setAccessToken(null);
+          setRefreshToken(null);
+          setUser(null);
+        }
       } finally {
-        setIsLoading(false);
+        if (sessionVersionRef.current === versionAtStart) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -73,6 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string, rememberMe = false) => {
+      sessionVersionRef.current += 1;
       const response = await api.post<{
         accessToken: string;
         refreshToken: string;
@@ -82,6 +96,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAccessToken(response.accessToken);
       setRefreshToken(response.refreshToken);
       setUser(response.user);
+      // A successful login establishes the session — clear the loading flag even
+      // if the mount-time restore is still in flight (it will discard its own
+      // result via the version guard), so gate-keeping effects (e.g. the login
+      // page's redirect) can fire immediately.
+      setIsLoading(false);
     },
     [],
   );
